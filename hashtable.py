@@ -5,7 +5,7 @@ class HashTable:
         self.hashtable = {}
 
     # Requirement A
-    def add_package(self, pkg_id, pkg_weight=None, d_address=None, d_deadline=None, d_city=None, d_zip_code=None, d_status=None):
+    def add_package(self, pkg_id, pkg_weight=None, d_address=None, d_state=None, d_city=None, d_zip_code=None, d_deadline=None, d_status=None, special_notes=None):
         # Convert to string
         pkg_id = str(pkg_id)
 
@@ -14,9 +14,11 @@ class HashTable:
             "package_weight": pkg_weight,
             "delivery_address": d_address,
             "delivery_city": d_city,
+            "delivery_state": d_state,
             "delivery_zip_code": d_zip_code,
             "delivery_deadline": d_deadline,
-            "delivery_status": d_status
+            "delivery_status": d_status,
+            "special_notes": special_notes
         }
 
     # Requirement B
