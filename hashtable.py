@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
 
+# Package class to simplify data access
+class Package:
+    def __init__(self, pkg_id, **pkgdict):
+        self.id = pkg_id
+        self.weight = pkgdict.get("package_weight")
+        self.address = pkgdict.get("delivery_address")
+        self.city = pkgdict.get("delivery_city")
+        self.state = pkgdict.get("delivery_state")
+        self.zip_code = pkgdict.get("delivery_zip_code")
+        self.deadline = pkgdict.get("delivery_deadline")
+        self.status = pkgdict.get("delivery_status")
+        self.notes = pkgdict.get("special_notes")
+
+
 class HashTable:
     def __init__(self):
         self.hashtable = {}
@@ -25,7 +39,7 @@ class HashTable:
     def get_package(self, pkg_id):
         # Convert to string
         pkg_id = str(pkg_id)
-
-        # Return package data or None
-        return self.hashtable.get(pkg_id)
+        pkg_data = self.hashtable.get(pkg_id)
+        # Return package object
+        return Package(pkg_id, pkg_data)
         
