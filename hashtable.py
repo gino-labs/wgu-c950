@@ -19,5 +19,11 @@ class HashTable:
             "delivery_status": d_status
         }
 
-    def get_package(self):
-        pass
+    # Requirement B
+    def get_package(self, pkg_id):
+        # Convert to string
+        pkg_id = str(pkg_id)
+
+        # Return package data or None
+        return self.hashtable.get(pkg_id)
+        
