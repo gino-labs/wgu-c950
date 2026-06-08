@@ -24,9 +24,9 @@ class HashTable:
 
     # Requirement B
     def get_package(self, package_id):
-        # Convert to string
         package_id = str(package_id)
         package_data = self.hashtable.get(package_id)
-        # Return package object
-        return Package(package_id, package_data)
+
+        # Return package object (Unpack dict)
+        return Package(package_id, **package_data)
         
