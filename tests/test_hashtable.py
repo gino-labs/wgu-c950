@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from ..hashtable import HashTable
-from ..package import Package
+from hashtable import HashTable
 
 # TODO Tests to cover
 '''Test deadlines - EOD, 9:00 AM, 10:30 AM'''
@@ -13,7 +12,7 @@ from ..package import Package
 - 100 Must be delivered with 93,95
 '''
 
-def test_package_hashtable():
+def test_hashtable():
     ht = HashTable()
     
     pkg_id = 99
@@ -30,7 +29,7 @@ def test_package_hashtable():
     )
     assert ht.hashtable != {}
     pkg = ht.get_package(pkg_id)
-    assert pkg.id == pkg_id
+    assert int(pkg.id) == pkg_id
     assert pkg.weight is not None
     assert pkg.address is not None
     assert pkg.city is not None
