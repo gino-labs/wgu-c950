@@ -2,13 +2,13 @@
 
 # Package class to simplify data access
 class Package:
-    def __init__(self, pkg_id, **pkgdict):
-        self.id = pkg_id
-        self.weight = pkgdict.get("package_weight")
-        self.address = pkgdict.get("delivery_address")
-        self.city = pkgdict.get("delivery_city")
-        self.state = pkgdict.get("delivery_state")
-        self.zip_code = pkgdict.get("delivery_zip_code")
-        self.deadline = pkgdict.get("delivery_deadline")
-        self.status = pkgdict.get("delivery_status")
-        self.notes = pkgdict.get("special_notes")
+    def __init__(self, package_id, **package_data):
+        self.id = package_id
+        self.weight = package_data.get("package_weight")
+        self.address = package_data.get("delivery_address")
+        self.city = package_data.get("delivery_city")
+        self.state = package_data.get("delivery_state")
+        self.zip_code = package_data.get("delivery_zip_code")
+        self.deadline = package_data.get("delivery_deadline")
+        self.status = package_data.get("delivery_status")
+        self.notes = package_data.get("special_notes")
