@@ -13,5 +13,6 @@ class Package:
         self.status = package_data.get("delivery_status")
         self.notes = package_data.get("special_notes")
 
+    # Add support for direct modulo operations
     def __mod__(self, other):
         return self.id % other
