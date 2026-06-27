@@ -89,7 +89,7 @@ class PackageHashTable:
 
 # Helper class for containing data for a neighbor
 class Neighbor:
-    def __init__(self, name: str, address: str, distance: float):
+    def __init__(self, id: int, name: str, address: str, distance: float):
         self.name = name
         self.address = address
         self.distance = distance
@@ -97,7 +97,7 @@ class Neighbor:
 
 # Helper class for containing data for a delivery location
 class DeliveryLocation:
-    def __init__(self, name: str, address: str):
+    def __init__(self, id: int, name: str, address: str):
         self.name = name
         self.address = address
         self.address2 = None
@@ -142,8 +142,9 @@ class DistanceTable:
             split_field = row[0].split("\n")
             location_name = split_field[0].strip()
             location_address = split_field[1].strip()
+            location_id = h
 
-            current_location = DeliveryLocation(location_name, location_address)
+            current_location = DeliveryLocation(location_id, location_name, location_address)
             current_location.address2 = row[1]
 
             for i, column in enumerate(row):
@@ -153,12 +154,13 @@ class DistanceTable:
                     neighbor_split = top_row[i].split("\n")
                     neighbor_name = neighbor_split[0].strip()
                     neighbor_address = neighbor_split[1].strip()
+                    neighbor_id = i - 1
                     
                     if column:
                         neighbor_distance = column
                     else:
                         neighbor_distance = float(parsed_table[i - 1][h + 1])          
 
-                    neighbor = Neighbor(neighbor_name, neighbor_address, neighbor_distance)
+                    neighbor = Neighbor(neighbor_id, neighbor_name, neighbor_address, neighbor_distance)
                     current_location.neighbors.append(neighbor)
             self.locations.append(current_location)
