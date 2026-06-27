@@ -140,8 +140,8 @@ class DistanceTable:
                 continue
 
             split_field = row[0].split("\n")
-            location_name = split_field[0]
-            location_address = split_field[1]
+            location_name = split_field[0].strip()
+            location_address = split_field[1].strip()
 
             current_location = DeliveryLocation(location_name, location_address)
             current_location.address2 = row[1]
@@ -151,8 +151,8 @@ class DistanceTable:
                     continue
                 else:
                     neighbor_split = top_row[i].split("\n")
-                    neighbor_name = neighbor_split[0]
-                    neighbor_address = neighbor_split[1]
+                    neighbor_name = neighbor_split[0].strip()
+                    neighbor_address = neighbor_split[1].strip()
                     
                     if column:
                         neighbor_distance = column
