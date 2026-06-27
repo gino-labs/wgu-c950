@@ -75,7 +75,6 @@ class PackageHashTable:
                     continue
                 
                 if start_loading:
-                    print(f"Loading package {row[package_id_index]}")
                     self.add_package(
                         row[package_id_index],
                         package_weight = row[weight_index],
@@ -141,11 +140,11 @@ class DistanceTable:
                 continue
 
             split_field = row[0].split("\n")
-            hub_name = split_field[0]
-            hub_address = split_field[1]
+            location_name = split_field[0]
+            location_address = split_field[1]
 
-            current_hub = DeliveryLocation(hub_name, hub_address)
-            current_hub.address2 = row[1]
+            current_location = DeliveryLocation(location_name, location_address)
+            current_location.address2 = row[1]
 
             for i, column in enumerate(row):
                 if i < 2:
@@ -161,5 +160,5 @@ class DistanceTable:
                         neighbor_distance = float(parsed_table[i - 1][h + 1])          
 
                     neighbor = Neighbor(neighbor_name, neighbor_address, neighbor_distance)
-                    current_hub.neighbors.append(neighbor)
-            self.locations.append(current_hub)
+                    current_location.neighbors.append(neighbor)
+            self.locations.append(current_location)
