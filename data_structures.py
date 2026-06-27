@@ -49,7 +49,7 @@ class PackageHashTable:
         return self.packages[index]
     
     # Load package data from csv task files
-    def load_packages_from_csv(self, csv_file="task_files/wgups_package_file.csv"):
+    def load_packages_from_csv(self, csv_file="wgups_package_file.csv"):
         self.csv_file = Path(csv_file)
         if not self.csv_file.exists:
             raise FileNotFoundError(f"CSV file not found: {self.csv_file}")
@@ -107,7 +107,7 @@ class DeliveryLocation:
 
 # Class for organizing distance table data
 class DistanceTable:
-    def __init__(self, csv_file="task_files/wgups_distance_table.csv"):
+    def __init__(self, csv_file="wgups_distance_table.csv"):
         self.csv_file = Path(csv_file)
         if not self.csv_file.exists:
             raise FileNotFoundError(f"CSV file not found: {self.csv_file}")

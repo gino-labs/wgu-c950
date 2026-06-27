@@ -19,17 +19,17 @@ My Notes:
 - With assumption that each driver stays with the same truck, truck 3 is ignored due to only having 2 drivers available.
 
 """
-
-
+from data_structures import DistanceTable, PackageHashTable
 
 ### Main ###
 if __name__ == "__main__":
 
-    # Phase 0: Setup
+    ### Phase 0: Setup
     distance_table = DistanceTable()
     package_hashtable = PackageHashTable()
     package_hashtable.load_packages_from_csv()
 
-    # Phase 1: Load Trucks
+    ### Phase 1: Load Trucks
+    
 
-    # Phase 2: Deliver Packages
+    ### Phase 2: Deliver Packages
