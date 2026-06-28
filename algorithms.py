@@ -6,12 +6,10 @@ class Truck:
         self.miles_driven = 0
         self.capacity = 16
         self.trip_counter = 1
-        self.current_location_name = "Western Governors University"
-        self.current_location_address = ""
 
     # Greedy Neighbor Algorithm Route
     def generate_delivery_route(self, packages_to_deliver: list[Package], distance_table: DistanceTable):
-        current_location = self.current_location_name
+        current_location = 
         delivery_route = []
         while len(delivery_route) != len(packages_to_deliver) + 1:
 
