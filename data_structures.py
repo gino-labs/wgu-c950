@@ -87,14 +87,6 @@ class PackageHashTable:
                     )
 
 
-# Helper class for containing data for a neighbor
-class Neighbor:
-    def __init__(self, name: str, address: str, distance: float):
-        self.name = name
-        self.address = address
-        self.distance = distance
-
-
 # Helper class for containing data for a delivery location
 class DeliveryLocation:
     def __init__(self, name: str, address: str):
@@ -102,6 +94,20 @@ class DeliveryLocation:
         self.address = address
         self.address2 = None
         self.neighbors = []
+    
+    def get_nearest_neighbor(self):
+        if not self.neighbors:
+            return None
+        
+        nearest_neighbor = min(self.neighbors, key=lambda neighbor: neighbor.distance)
+        return nearest_neighbor
+
+
+# Helper class for containing data for a neighbor
+class Neighbor:
+    def __init__(self, distance: float, delivery_location: DeliveryLocation):
+        self.distance = distance
+        self.location = delivery_location
 
 
 # Class for organizing distance table data
@@ -158,6 +164,8 @@ class DistanceTable:
                     else:
                         neighbor_distance = float(parsed_table[i - 1][h + 1])          
 
+                    if neighbor_distance == 0.0:
+                        continue
                     neighbor = Neighbor(neighbor_name, neighbor_address, neighbor_distance)
                     current_location.neighbors.append(neighbor)
             self.locations.append(current_location)
