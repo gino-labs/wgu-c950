@@ -88,27 +88,18 @@ class PackageHashTable:
 
 
 # Helper class for containing data for a delivery location
-class DeliveryLocation:
-    def __init__(self, name: str, address: str):
+class Location:
+    def __init__(self, name: str, address: str, zip: int):
         self.name = name
         self.address = address
-        self.address2 = None
-        self.neighbors = []
+        self.zip = zip
     
-    def get_nearest_neighbor(self):
-        if not self.neighbors:
-            return None
-        
-        nearest_neighbor = min(self.neighbors, key=lambda neighbor: neighbor.distance)
-        return nearest_neighbor
 
 
-# Helper class for containing data for a neighbor
 class Neighbor:
-    def __init__(self, distance: float, delivery_location: DeliveryLocation):
+    def __init__(self, neighbor: Location, distance: float):
+        self.neighbor = neighbor
         self.distance = distance
-        self.location = delivery_location
-
 
 # Class for organizing distance table data
 class DistanceTable:
@@ -116,11 +107,10 @@ class DistanceTable:
         self.csv_file = Path(csv_file)
         if not self.csv_file.exists:
             raise FileNotFoundError(f"CSV file not found: {self.csv_file}")
-        self.locations = []
-        self.build_table()
+        self.table = self._parse_distance_table()
 
     # Parse data from table and return 2D list
-    def parse_distance_table(self):
+    def _parse_distance_table(self):
         with open(self.csv_file, "r", encoding="utf-8") as file:
             reader = csv.reader(file)
 
@@ -132,41 +122,7 @@ class DistanceTable:
                     start_loading_data = True
 
                 if start_loading_data:
-                    parsed_table.append(row)       
+                    parsed_table.append(row)
         return parsed_table
 
-    # Restructure data into delivery locations with list of neighbors
-    def build_table(self):
-        # Table 28x29, index 1-27 == 2-28
-        parsed_table = self.parse_distance_table()
-
-        top_row = parsed_table[0]
-        for h, row in enumerate(parsed_table):
-            if h == 0:
-                for i, column in enumerate(row):
-                    split_field = row[i].split("\n")
-                    location_name = split_field[0].strip()
-                    location_address = split_field[1].strip()
-
-                    location = DeliveryLocation(location_name, location_address)
-                    self.locations.append(location)
-
-            for i, column in enumerate(row):
-                if i == 1:
-                    continue
-                else:
-                    neighbor_split = top_row[i].split("\n")
-                    neighbor_name = neighbor_split[0].strip()
-                    neighbor_address = neighbor_split[1].strip()
-                    
-                    if column:
-                        neighbor_distance = column
-                    else:
-                        neighbor_distance = float(parsed_table[i - 1][h + 1])          
-
-                    if neighbor_distance == 0.0:
-                        continue
-                    neighbor = Neighbor(neighbor_name, neighbor_address, neighbor_distance)
-                    current_location.neighbors.append(neighbor)
-            self.locations.append(current_location)
 
