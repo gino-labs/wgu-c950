@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import csv
 from pathlib import Path
 
@@ -89,12 +90,24 @@ class PackageHashTable:
 
 # Helper class for containing data for a delivery location
 class Location:
-    def __init__(self, name: str, address: str, zip: int):
+    def __init__(self, name: str, address: str):
         self.name = name
         self.address = address
-        self.zip = zip
+        self.zip_code = None
+        self.neighbors = []
     
+    def __eq__(self, other):
+        if not isinstance(other, Location):
+            return False
+        return self.name == other.name
 
+    def set_zip_code(self, string_with_zip_code):
+        match = re.search(r'\((\d{5})\)', string_with_zip_code)
+        self.zip_code = match.group(1)
+
+    def add_neighbor(self, neighbor_location: "Location", neighbor_distance):
+        neighbor = Neighbor(neighbor_location, neighbor_distance)
+        self.neighbors.append(neighbor)
 
 class Neighbor:
     def __init__(self, neighbor: Location, distance: float):
@@ -107,22 +120,40 @@ class DistanceTable:
         self.csv_file = Path(csv_file)
         if not self.csv_file.exists:
             raise FileNotFoundError(f"CSV file not found: {self.csv_file}")
-        self.table = self._parse_distance_table()
+        self.table = self._build_table()
+
+    # Parse location string into Location instance
+    def location(self, location_string: str):
+        location_data = location_string.split("/n")
+        location_name = location_data[0].strip()
+        location_address = location_data[1].strip().strip(",")
+        return Location(location_name, location_address)
 
     # Parse data from table and return 2D list
-    def _parse_distance_table(self):
+    def _build_table(self):
         with open(self.csv_file, "r", encoding="utf-8") as file:
             reader = csv.reader(file)
-
-            start_loading_data = False
-            parsed_table = []
-
+            
+            locations = []
+            read_data = False
             for row in reader:
                 if "DISTANCE BETWEEN HUBS IN MILES" in row:
-                    start_loading_data = True
+                    for h, column in enumerate(row):
+                        if h < 2:
+                            continue
+                        locations.append(self.location(column))
+                    read_data = True
+                    continue
 
-                if start_loading_data:
-                    parsed_table.append(row)
-        return parsed_table
+                if read_data:
+                    for i, column in enumerate(row):
+                        if i == 0:
+                            current_location = self.location(column)
+                        elif i == 1:
+                            current_location.set_zip_code(column)
+                        else:
+                            pass # TODO Map neighbors and distances                     
 
+
+dt = DistanceTable()
 
