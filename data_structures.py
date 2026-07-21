@@ -3,6 +3,7 @@ import re
 import csv
 from pathlib import Path
 
+
 # Helper class to represent a given package
 class Package:
     def __init__(self, package_id, **package_data):
@@ -105,14 +106,19 @@ class Location:
         match = re.search(r'\((\d{5})\)', string_with_zip_code)
         self.zip_code = match.group(1)
 
-    def add_neighbor(self, neighbor_location: "Location", neighbor_distance):
+    def add_neighbor(self, neighbor_location: "Location", neighbor_distance: float):
         neighbor = Neighbor(neighbor_location, neighbor_distance)
         self.neighbors.append(neighbor)
 
+
 class Neighbor:
     def __init__(self, neighbor: Location, distance: float):
-        self.neighbor = neighbor
+        self.name = neighbor.name
+        self.address = neighbor.address
+        self.zip_code = neighbor.zip_code
+        self.neighbors = neighbor.neighbors
         self.distance = distance
+
 
 # Class for organizing distance table data
 class DistanceTable:
@@ -120,40 +126,41 @@ class DistanceTable:
         self.csv_file = Path(csv_file)
         if not self.csv_file.exists:
             raise FileNotFoundError(f"CSV file not found: {self.csv_file}")
-        self.table = self._build_table()
+        else:
+            self.locations = []
+            self._parse_csv()
 
     # Parse location string into Location instance
-    def location(self, location_string: str):
-        location_data = location_string.split("/n")
-        location_name = location_data[0].strip()
-        location_address = location_data[1].strip().strip(",")
-        return Location(location_name, location_address)
+    def _set_locations(self, locations_list: list):
+        for location in locations_list:
+            location_data = location.split("\n")
+            location_name = location_data[0].strip()
+            location_address = location_data[1].strip().strip(",")
+            self.locations.append(Location(location_name, location_address))
 
-    # Parse data from table and return 2D list
-    def _build_table(self):
+    def _parse_csv(self):
         with open(self.csv_file, "r", encoding="utf-8") as file:
-            reader = csv.reader(file)
-            
-            locations = []
-            read_data = False
-            for row in reader:
-                if "DISTANCE BETWEEN HUBS IN MILES" in row:
-                    for h, column in enumerate(row):
-                        if h < 2:
-                            continue
-                        locations.append(self.location(column))
-                    read_data = True
-                    continue
+            csv_data = list(csv.reader(file))
+  
+        locations_table_head = csv_data[7][2:]
+        self._set_locations(locations_table_head)
 
-                if read_data:
-                    for i, column in enumerate(row):
-                        if i == 0:
-                            current_location = self.location(column)
-                        elif i == 1:
-                            current_location.set_zip_code(column)
-                        else:
-                            pass # TODO Map neighbors and distances                     
+        rows = csv_data[8:]
+        for i, row in enumerate(rows):
+            # TODO Set zip code here using data from row[1]
+            for j, col in enumerate(row[2:]):
+                try:
+                    distance = float(col)
+                except ValueError:
+                    inverse_row = rows[j][2:]
+                    distance = float(inverse_row[i])
+                self.locations[i].add_neighbor(self.locations[j], distance)
 
+    def show_distances(self):
+        for location in self.locations:
+            print(f"--------\nLocation: {location.name}")
+            for neighbor in location.neighbors:
+                print(f"  Neighbor ({neighbor.distance} mi): {neighbor.name}")
 
 dt = DistanceTable()
-
+dt.show_distances()
