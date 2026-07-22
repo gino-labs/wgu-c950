@@ -102,9 +102,11 @@ class Location:
             return False
         return self.name == other.name
 
-    def set_zip_code(self, string_with_zip_code):
-        match = re.search(r'\((\d{5})\)', string_with_zip_code)
-        self.zip_code = match.group(1)
+    def set_zip_code(self, first_two_address_strings: list):
+        match = re.search(r'841\d{2}', first_two_address_strings[0])
+        if not match:
+            match = re.search(r'841\d{2}', first_two_address_strings[1])
+        self.zip_code = match.group()
 
     def add_neighbor(self, neighbor_location: "Location", neighbor_distance: float):
         neighbor = Neighbor(neighbor_location, neighbor_distance)
@@ -147,7 +149,7 @@ class DistanceTable:
 
         rows = csv_data[8:]
         for i, row in enumerate(rows):
-            # TODO Set zip code here using data from row[1]
+            self.locations[i].set_zip_code(row[:2])
             for j, col in enumerate(row[2:]):
                 try:
                     distance = float(col)
@@ -158,9 +160,11 @@ class DistanceTable:
 
     def show_distances(self):
         for location in self.locations:
-            print(f"--------\nLocation: {location.name}")
+            for n in range(len(location.name) + 10):
+                print("-", end='')
+            print(f"\nLocation: {location.name}")
             for neighbor in location.neighbors:
                 print(f"  Neighbor ({neighbor.distance} mi): {neighbor.name}")
 
-dt = DistanceTable()
-dt.show_distances()
+#dt = DistanceTable()
+#dt.show_distances()
