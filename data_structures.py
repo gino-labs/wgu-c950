@@ -177,6 +177,23 @@ class DistanceTable:
             for neighbor in location.neighbors:
                 print(f"  Neighbor ({neighbor.distance} mi): {neighbor.name}")
 
+# TODO                
+class Timeclock:
+    def __init__(self):
+        pass
+    
+
+class 
+
+class Truck:
+    def __init__(self, truck_number: int):
+        self.truck_number = truck_number
+        self.miles_driven = 0
+        self.capacity = 16
+        self.trip_counter = 1
+
+if __name__ == "__main__":
+    pass
 # TESTING
 # dt = DistanceTable()
 # pt = PackageHashTable()
