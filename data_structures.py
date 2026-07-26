@@ -2,7 +2,8 @@
 import re
 import csv
 from pathlib import Path
-
+'''Imported python modules/packages to assist with 
+parsing provided CSV files for this task'''
 
 # Helper class to represent a given package
 class Package:
@@ -22,12 +23,14 @@ class Package:
         return self.id % other
 
 
-### Hash Table data structure with tasks A & B
+### Hash Table data structure with tasks A & B ###
 class PackageHashTable:
     def __init__(self, size=40):
         self.packages = [None] * size
 
-    ### Requirement A
+    #####################
+    ### Requirement A ###
+    #####################
     def add_package(self, package_id, package_weight=None, delivery_address=None, delivery_city=None, delivery_state=None, delivery_zip_code=None, delivery_deadline=None, delivery_status=None, special_notes=None):
         package = Package(
             package_id,
@@ -44,7 +47,9 @@ class PackageHashTable:
         index = package % len(self.packages)
         self.packages[index] = package
 
-    ### Requirement B
+    #####################
+    ### Requirement B ###
+    #####################
     def get_package(self, package_id: int) -> Package:
         # Return Package object at index
         index = package_id % len(self.packages)
@@ -56,6 +61,7 @@ class PackageHashTable:
         if not self.csv_file.exists:
             raise FileNotFoundError(f"CSV file not found: {self.csv_file}")
         
+        # Read data from prvided CSV file
         with open(csv_file, "r", encoding="utf-8") as file:
             reader = csv.reader(file)
 
@@ -76,6 +82,7 @@ class PackageHashTable:
                     start_loading = True
                     continue
                 
+                # Load packages after the header row is parsed
                 if start_loading:
                     self.add_package(
                         row[package_id_index],
@@ -97,6 +104,7 @@ class Location:
         self.zip_code = None
         self.neighbors = []
     
+    # Helper method for using Location class with python 'in' syntax
     def __eq__(self, other):
         if not isinstance(other, Location):
             return False
@@ -112,7 +120,7 @@ class Location:
         neighbor = Neighbor(neighbor_location, neighbor_distance)
         self.neighbors.append(neighbor)
 
-
+# Object Containing Neighbor Details for a given location
 class Neighbor:
     def __init__(self, neighbor: Location, distance: float):
         self.name = neighbor.name
@@ -129,6 +137,7 @@ class DistanceTable:
         if not self.csv_file.exists:
             raise FileNotFoundError(f"CSV file not found: {self.csv_file}")
         else:
+            # List of Location Object Instances
             self.locations = []
             self._parse_csv()
 
@@ -140,6 +149,7 @@ class DistanceTable:
             location_address = location_data[1].strip().strip(",")
             self.locations.append(Location(location_name, location_address))
 
+    # Helper function for parsing distance table csv data
     def _parse_csv(self):
         with open(self.csv_file, "r", encoding="utf-8") as file:
             csv_data = list(csv.reader(file))
@@ -158,6 +168,7 @@ class DistanceTable:
                     distance = float(inverse_row[i])
                 self.locations[i].add_neighbor(self.locations[j], distance)
 
+    # Helper function to show and compare distances between neighbors
     def show_distances(self):
         for location in self.locations:
             for n in range(len(location.name) + 10):
@@ -166,5 +177,7 @@ class DistanceTable:
             for neighbor in location.neighbors:
                 print(f"  Neighbor ({neighbor.distance} mi): {neighbor.name}")
 
-#dt = DistanceTable()
-#dt.show_distances()
+# TESTING
+# dt = DistanceTable()
+# pt = PackageHashTable()
+# pt.load_packages_from_csv()
