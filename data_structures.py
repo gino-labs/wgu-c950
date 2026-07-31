@@ -54,6 +54,9 @@ class PackageHashTable:
         # Return Package object at index
         index = package_id % len(self.packages)
         return self.packages[index]
+
+    def timestamp(self):
+        pass # TODO
     
     # Load package data from csv task files
     def load_packages_from_csv(self, csv_file="wgups_package_file.csv"):
@@ -181,9 +184,6 @@ class DistanceTable:
 class Timeclock:
     def __init__(self):
         pass
-    
-
-class 
 
 class Truck:
     def __init__(self, truck_number: int):
