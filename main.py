@@ -19,10 +19,6 @@ Task Assumptions:
 •  The distances provided in the “WGUPS Distance Table” are equal regardless of the direction traveled.
 •  The day ends when all 40 packages have been delivered.
 
-My Notes:
-- With assumption that each driver stays with the same truck, truck 3 is ignored due to only having 2 drivers available.
-
-Imports for CSV parsing and UI
 """
 import re
 import csv
@@ -42,10 +38,10 @@ class Package:
         self.status = package_data.get("delivery_status")
         self.notes = package_data.get("special_notes")
 
-    # Add support for direct modulo operations
-    def __mod__(self, other):
-        return self.id % other
-
+    def set_status(self, status: str):
+        if status.strip().lower() not in ("delayed", "at the hub", "en route", "delivered"):
+            raise ValueError(f"Invalid status: {status}")
+        self.status == status
 
 ### Hash Table data structure with tasks A & B ###
 class PackageHashTable:
@@ -67,8 +63,8 @@ class PackageHashTable:
             delivery_status = delivery_status,
             special_notes = special_notes
         )
-        # Modulo hash and assign Package to hashtable index
-        index = package % len(self.packages)
+        # Hash Package ID with modulo operator and store at index
+        index = package.id % len(self.packages)
         self.packages[index] = package
 
     #####################
@@ -78,19 +74,23 @@ class PackageHashTable:
         # Return Package object at index
         index = package_id % len(self.packages)
         return self.packages[index]
+
+    # Update package delivery status to include time.
+    def update_package_status(self, package_id: int, status: str, time: str):
+        package = self.get_package(package_id)
+        package.set_status(status)
     
-    # Load package data from csv task files
+    # Load package data from csv task file
     def load_from_csv(self, csv_file):
         self.csv_file = Path(csv_file)
         if not self.csv_file.exists():
             raise FileNotFoundError(f"CSV file not found: {self.csv_file}")
         
-        # Read data from prvided CSV file
         with open(csv_file, "r", encoding="utf-8") as file:
-            reader = csv.reader(file)
+            rows = list(csv.reader(file))
 
             start_loading = False
-            for row in reader:
+            for row in rows:
                 if "Package" in row[0] and "ID" in row[0]:
                     for i, header in enumerate(row):
                         row[i] = header.replace("\n", " ").strip()
@@ -108,6 +108,10 @@ class PackageHashTable:
                 
                 # Load packages after the header row is parsed
                 if start_loading:
+                    if "delayed" in row[notes_index].lower():
+                        delivery_status = "delayed"
+                    else:
+                        delivery_status = "at the hub"
                     self.add_package(
                         row[package_id_index],
                         package_weight = row[weight_index],
@@ -116,6 +120,7 @@ class PackageHashTable:
                         delivery_state = row[state_index],
                         delivery_zip_code = row[zip_index],
                         delivery_deadline = row[deadline_index],
+                        delivery_status = delivery_status,
                         special_notes = row[notes_index]
                     )
 
@@ -177,9 +182,10 @@ class DistanceTable:
         with open(csv_file, "r", encoding="utf-8") as file:
             csv_data = list(csv.reader(file))
   
-        locations_table_head = csv_data[7][2:]
+        locations_table_head = csv_data[7][2:] # Row 7, Column 3+
         self._set_locations(locations_table_head)
 
+        # Parse data beginning at row 8
         rows = csv_data[8:]
         for i, row in enumerate(rows):
             self.locations[i].set_zip_code(row[:2])
@@ -217,7 +223,7 @@ class UI:
         self.package_table = None
         self.distance_table = None
         print("##################################################")
-        print("# WGU - Data Structures and Algorithms II (C949) #")
+        print("# WGU - Data Structures and Algorithms II (C950) #")
         print("#             Student ID: 011576592              #")
         print("#           Student name: Gino Curtis            #")
         print("##################################################", end="\n\n")
@@ -244,16 +250,12 @@ class UI:
 
     def run(self):
         while True:
-            self.distance_table.show_distances()
+            # TODO
             break
-            input("TODO...")
+
 
 if __name__ == "__main__":
     ui = UI()
     ui.load_package_data("wgups_package_file.csv")
     ui.load_distance_data("wgups_distance_table.csv")
     ui.run()
-# TESTING
-# dt = DistanceTable()
-# pt = PackageHashTable()
-# pt.load_packages_from_csv()
