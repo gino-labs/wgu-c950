@@ -25,6 +25,19 @@ import csv
 import time
 from pathlib import Path
 
+class SimulatedTime:
+    def __init__(self):
+        self.start_time = "8:00am"
+        self.current_time = self.start_time
+
+    def update(self, time: str):
+        self.current_time = time.lower()
+
+    def stamp(self):
+        hours, minutes = self.current_time.split(":")
+
+
+
 # Helper class to represent a given package
 class Package:
     def __init__(self, package_id, **package_data):
@@ -35,10 +48,19 @@ class Package:
         self.state = package_data.get("delivery_state")
         self.zip_code = package_data.get("delivery_zip_code")
         self.deadline = package_data.get("delivery_deadline")
-        self.status = package_data.get("delivery_status")
         self.notes = package_data.get("special_notes")
+        self.status = None
 
-    def set_status(self, status: str):
+    def _calculate_time_spent(self, distance_miles: int):
+        # Assume constant speed of 18mph
+        speed = 18
+        time_in_hours = distance_miles * speed
+        time_in_minutes = time_in_hours * 60
+        h = int(time_in_hours)
+        m = int(time_in_minutes)
+        return f"{h}:{m}"
+        
+    def update_status(self, status: str):
         if status.strip().lower() not in ("delayed", "at the hub", "en route", "delivered"):
             raise ValueError(f"Invalid status: {status}")
         self.status == status
@@ -47,6 +69,7 @@ class Package:
 class PackageHashTable:
     def __init__(self, size=40):
         self.packages = [None] * size
+        # TODO FIGURE OUT TIME TRACKING 
 
     #####################
     ### Requirement A ###
@@ -76,7 +99,7 @@ class PackageHashTable:
         return self.packages[index]
 
     # Update package delivery status to include time.
-    def update_package_status(self, package_id: int, status: str, time: str):
+    def update_package_status(self, package_id: int, status: str):
         package = self.get_package(package_id)
         package.set_status(status)
     
