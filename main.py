@@ -22,10 +22,11 @@ Task Assumptions:
 My Notes:
 - With assumption that each driver stays with the same truck, truck 3 is ignored due to only having 2 drivers available.
 
-Imports for CSV parsing
+Imports for CSV parsing and UI
 """
 import re
 import csv
+import time
 from pathlib import Path
 
 # Helper class to represent a given package
@@ -79,7 +80,7 @@ class PackageHashTable:
         return self.packages[index]
     
     # Load package data from csv task files
-    def load_packages_from_csv(self, csv_file="wgups_package_file.csv"):
+    def load_from_csv(self, csv_file):
         self.csv_file = Path(csv_file)
         if not self.csv_file.exists():
             raise FileNotFoundError(f"CSV file not found: {self.csv_file}")
@@ -155,14 +156,9 @@ class Neighbor:
 
 # Class for organizing distance table data
 class DistanceTable:
-    def __init__(self, csv_file="wgups_distance_table.csv"):
-        self.csv_file = Path(csv_file)
-        if not self.csv_file.exists:
-            raise FileNotFoundError(f"CSV file not found: {self.csv_file}")
-        else:
-            # List of Location Object Instances
+    def __init__(self):
+            # List to hold Location instances
             self.locations = []
-            self._parse_csv()
 
     # Parse location string into Location instance
     def _set_locations(self, locations_list: list):
@@ -173,8 +169,12 @@ class DistanceTable:
             self.locations.append(Location(location_name, location_address))
 
     # Helper function for parsing distance table csv data
-    def _parse_csv(self):
-        with open(self.csv_file, "r", encoding="utf-8") as file:
+    def load_from_csv(self, csv_file):
+        csv_file = Path(csv_file)
+        if not csv_file.exists:
+            raise FileNotFoundError(f"CSV file not found: {csv_file}")
+        
+        with open(csv_file, "r", encoding="utf-8") as file:
             csv_data = list(csv.reader(file))
   
         locations_table_head = csv_data[7][2:]
@@ -214,10 +214,45 @@ class Truck:
 #####################
 class UI:
     def __init__(self):
-        pass
+        self.package_table = None
+        self.distance_table = None
+        print("##################################################")
+        print("# WGU - Data Structures and Algorithms II (C949) #")
+        print("#             Student ID: 011576592              #")
+        print("#           Student name: Gino Curtis            #")
+        print("##################################################", end="\n\n")
+        self.msg("Welcome to the Program's Interface!", newlines=2, sleep=3)
+
+    def msg(self, message: str, newlines=1, sleep=1):
+        end = ""
+        for n in range(newlines):
+            end += "\n"
+        print(message, end=end)
+        time.sleep(sleep)
+
+    def load_package_data(self, packages_csv_file: str):
+        self.msg(f"Begin loading package data from {packages_csv_file}")
+        self.package_table = PackageHashTable()
+        self.package_table.load_from_csv(packages_csv_file)
+        self.msg(f"Package data loaded.", newlines=2)
+
+    def load_distance_data(self, distances_csv_file):
+        self.msg(f"Begin loading package data from {distances_csv_file}")
+        self.distance_table = DistanceTable()
+        self.distance_table.load_from_csv(distances_csv_file)
+        self.msg(f"Distance data loaded.", newlines=2)
+
+    def run(self):
+        while True:
+            self.distance_table.show_distances()
+            break
+            input("TODO...")
 
 if __name__ == "__main__":
-    pass
+    ui = UI()
+    ui.load_package_data("wgups_package_file.csv")
+    ui.load_distance_data("wgups_distance_table.csv")
+    ui.run()
 # TESTING
 # dt = DistanceTable()
 # pt = PackageHashTable()
