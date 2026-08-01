@@ -230,13 +230,15 @@ class DistanceTable:
                 print(f"  Neighbor ({neighbor.distance} mi): {neighbor.name}")
 
 
-
 class Truck:
     def __init__(self, truck_number: int):
         self.truck_number = truck_number
         self.miles_driven = 0
         self.capacity = 16
         self.trip_counter = 1
+
+    def load_truck():
+        pass # TODO
 
 #####################
 ### Requirement D ###
@@ -245,6 +247,9 @@ class UI:
     def __init__(self):
         self.package_table = None
         self.distance_table = None
+        self.truck1 = Truck(1)
+        self.truck2 = Truck(2)
+        self.truck3 = Truck(3) # Unused with only 2 drivers
         print("##################################################")
         print("# WGU - Data Structures and Algorithms II (C950) #")
         print("#             Student ID: 011576592              #")
@@ -258,6 +263,10 @@ class UI:
             end += "\n"
         print(message, end=end)
         time.sleep(sleep)
+
+    def prompt(self, message_prompt, choices=[]):
+        answer = input(message_prompt)
+        # TODO
 
     def load_package_data(self, packages_csv_file: str):
         self.msg(f"Begin loading package data from {packages_csv_file}")
