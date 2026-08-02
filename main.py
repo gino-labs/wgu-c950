@@ -166,6 +166,12 @@ class DistanceTable:
             location_address = location_data[1].strip().strip(",")
             self.locations.append(Location(location_name, location_address))
 
+    def get_location(self, location_name: str):
+        for location in self.locations:
+            if location.name.lower() == location_name.lower():
+                return location
+        raise ValueError(f"Location not found: {location_name}")
+
     # Helper function for parsing distance table csv data
     def load_from_csv(self, csv_file):
         csv_file = Path(csv_file)
@@ -193,22 +199,35 @@ class DistanceTable:
     # Helper function to show and compare distances between neighbors
     def show_distances(self):
         for location in self.locations:
-            for n in range(len(location.name) + 10):
+            for _ in range(len(location.name) + 10):
                 print("-", end='')
             print(f"\nLocation: {location.name}")
             for neighbor in location.neighbors:
                 print(f"  Neighbor ({neighbor.distance} mi): {neighbor.name}")
 
 class Truck:
-    def __init__(self, truck_number: int):
+    def __init__(self, truck_number: int, distance_table: DistanceTable, package_hashtable: PackageHashTable):
         self.truck_number = truck_number
         self.speed = 18
         self.capacity = 16
         self.miles_driven = 0
-        self.trip_counter = 1
+        self.loaded_packages = []
+        self.distance_table = distance_table
+        self.package_hashtable = package_hashtable
         self.time = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
+        self.current_location = distance_table.get_location("Western Governors University")
 
-    def load_truck():
+    def load_truck(self, num_packages: int, package_hashtable: PackageHashTable):
+        if num_packages > self.capacity:
+            raise ValueError("Number of packages to load is greater than truck capacity.")
+        while num_packages < len(self.loaded_packages):
+            # Prioritize package constraints first
+            # Then prioritize package deadlines second
+            # Load based off of greedy neighbor algorithm route
+            for package in package_hashtable.packages:
+                pass
+
+    def start_delivery_route(self):
         pass # TODO
 
 #####################
@@ -216,11 +235,10 @@ class Truck:
 #####################
 class UI:
     def __init__(self):
-        self.package_table = None
+        self.package_hashtable = None
         self.distance_table = None
-        self.truck1 = Truck(1)
-        self.truck2 = Truck(2)
-        self.truck3 = Truck(3) # Unused with only 2 drivers
+        self.truck1 = None
+        self.truck2 = None
         print("##################################################")
         print("# WGU - Data Structures and Algorithms II (C950) #")
         print("#             Student ID: 011576592              #")
@@ -247,19 +265,26 @@ class UI:
 
     def load_package_data(self, packages_csv_file: str):
         self.msg(f"Package data loaded from {packages_csv_file}")
-        self.package_table = PackageHashTable()
-        self.package_table.load_from_csv(packages_csv_file)
+        self.package_hashtable = PackageHashTable()
+        self.package_hashtable.load_from_csv(packages_csv_file)
 
     def load_distance_data(self, distances_csv_file):
         self.distance_table = DistanceTable()
         self.distance_table.load_from_csv(distances_csv_file)
         self.msg(f"Distance data loaded from {distances_csv_file}", newlines=2)
 
+    def initialize_trucks(self):
+        if self.distance_table is None or self.package_hashtable is None:
+            raise ValueError("Data tables not loaded yet.")
+        self.truck1 = Truck(1, self.distance_table, self.package_hashtable)
+        self.truck2 = Truck(2, self.distance_table, self.package_hashtable)
+
     def run(self):
         self.load_package_data("wgups_package_file.csv")
         self.load_distance_data("wgups_distance_table.csv")
+        self.initialize_trucks()
         while True:
-            # TODO
+            print("Test run complete.")
             break
 
 if __name__ == "__main__":
