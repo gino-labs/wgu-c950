@@ -1,12 +1,8 @@
-#!/usr/bin/env python3
-#####################
-### Requirement C ###
-#####################
-"""
-Student ID: 011576592
-Student Name: Gino Curtis
-WGU C950 Data Structures and Algorithms 2
+# Student ID: 011576592
+# Student Name: Gino Curtis
+# WGU C950 Data Structures and Algorithms 2
 
+"""
 Task Assumptions:
 •  Each truck can carry a maximum of 16 packages, and the ID number of each package is unique.
 •  The trucks travel at an average speed of 18 miles per hour and have an infinite amount of gas with no need to stop.
@@ -18,25 +14,13 @@ Task Assumptions:
 •  The delivery address for package #9, Third District Juvenile Court, is wrong and will be corrected at 10:20 a.m. WGUPS is aware that the address is incorrect and will be updated at 10:20 a.m. However, WGUPS does not know the correct address (410 S. State St., Salt Lake City, UT 84111) until 10:20 a.m.
 •  The distances provided in the “WGUPS Distance Table” are equal regardless of the direction traveled.
 •  The day ends when all 40 packages have been delivered.
-
 """
+
 import re
 import csv
 import time
 from pathlib import Path
-
-class SimulatedTime:
-    def __init__(self):
-        self.start_time = "8:00am"
-        self.current_time = self.start_time
-
-    def update(self, time: str):
-        self.current_time = time.lower()
-
-    def stamp(self):
-        hours, minutes = self.current_time.split(":")
-
-
+from datetime import datetime, timedelta
 
 # Helper class to represent a given package
 class Package:
@@ -50,26 +34,16 @@ class Package:
         self.deadline = package_data.get("delivery_deadline")
         self.notes = package_data.get("special_notes")
         self.status = None
-
-    def _calculate_time_spent(self, distance_miles: int):
-        # Assume constant speed of 18mph
-        speed = 18
-        time_in_hours = distance_miles * speed
-        time_in_minutes = time_in_hours * 60
-        h = int(time_in_hours)
-        m = int(time_in_minutes)
-        return f"{h}:{m}"
         
-    def update_status(self, status: str):
+    def update_status(self, status: str, timestamp: datetime):
         if status.strip().lower() not in ("delayed", "at the hub", "en route", "delivered"):
             raise ValueError(f"Invalid status: {status}")
-        self.status == status
+        self.status = status.capitalize() + " - " + timestamp.strftime('%I:%M %p')
 
 ### Hash Table data structure with tasks A & B ###
 class PackageHashTable:
     def __init__(self, size=40):
         self.packages = [None] * size
-        # TODO FIGURE OUT TIME TRACKING 
 
     #####################
     ### Requirement A ###
@@ -95,13 +69,8 @@ class PackageHashTable:
     #####################
     def get_package(self, package_id: int) -> Package:
         # Return Package object at index
-        index = package_id % len(self.packages)
+        index = int(package_id) % len(self.packages)
         return self.packages[index]
-
-    # Update package delivery status to include time.
-    def update_package_status(self, package_id: int, status: str):
-        package = self.get_package(package_id)
-        package.set_status(status)
     
     # Load package data from csv task file
     def load_from_csv(self, csv_file):
@@ -131,22 +100,24 @@ class PackageHashTable:
                 
                 # Load packages after the header row is parsed
                 if start_loading:
-                    if "delayed" in row[notes_index].lower():
-                        delivery_status = "delayed"
-                    else:
-                        delivery_status = "at the hub"
+                    package_id = row[package_id_index]
                     self.add_package(
-                        row[package_id_index],
+                        package_id,
                         package_weight = row[weight_index],
                         delivery_address = row[address_index],
                         delivery_city = row[city_index],
                         delivery_state = row[state_index],
                         delivery_zip_code = row[zip_index],
                         delivery_deadline = row[deadline_index],
-                        delivery_status = delivery_status,
                         special_notes = row[notes_index]
                     )
 
+                    current_package = self.get_package(package_id)
+                    timestamp = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
+                    if "delayed" in current_package.notes.lower():
+                        current_package.update_status("delayed", timestamp)
+                    else:
+                        current_package.update_status("at the hub", timestamp)
 
 # Helper class for containing data for a delivery location
 class Location:
@@ -180,7 +151,6 @@ class Neighbor:
         self.zip_code = neighbor.zip_code
         self.neighbors = neighbor.neighbors
         self.distance = distance
-
 
 # Class for organizing distance table data
 class DistanceTable:
@@ -229,13 +199,14 @@ class DistanceTable:
             for neighbor in location.neighbors:
                 print(f"  Neighbor ({neighbor.distance} mi): {neighbor.name}")
 
-
 class Truck:
     def __init__(self, truck_number: int):
         self.truck_number = truck_number
-        self.miles_driven = 0
+        self.speed = 18
         self.capacity = 16
+        self.miles_driven = 0
         self.trip_counter = 1
+        self.time = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
 
     def load_truck():
         pass # TODO
@@ -255,39 +226,46 @@ class UI:
         print("#             Student ID: 011576592              #")
         print("#           Student name: Gino Curtis            #")
         print("##################################################", end="\n\n")
-        self.msg("Welcome to the Program's Interface!", newlines=2, sleep=3)
+        self.msg("Welcome to the Program's Interface!", newlines=2, sleep=1)
+        self.prompt("Press the 'return' key to begin...\n")
 
     def msg(self, message: str, newlines=1, sleep=1):
         end = ""
-        for n in range(newlines):
+        for _ in range(newlines):
             end += "\n"
         print(message, end=end)
         time.sleep(sleep)
 
     def prompt(self, message_prompt, choices=[]):
         answer = input(message_prompt)
-        # TODO
+        if choices == []:
+            return
+        while answer not in choices:
+            print(f"Invalid choice not in {choices}")
+            answer = input(message_prompt)
+        return answer
 
     def load_package_data(self, packages_csv_file: str):
-        self.msg(f"Begin loading package data from {packages_csv_file}")
+        self.msg(f"Package data loaded from {packages_csv_file}")
         self.package_table = PackageHashTable()
         self.package_table.load_from_csv(packages_csv_file)
-        self.msg(f"Package data loaded.", newlines=2)
 
     def load_distance_data(self, distances_csv_file):
-        self.msg(f"Begin loading package data from {distances_csv_file}")
         self.distance_table = DistanceTable()
         self.distance_table.load_from_csv(distances_csv_file)
-        self.msg(f"Distance data loaded.", newlines=2)
+        self.msg(f"Distance data loaded from {distances_csv_file}", newlines=2)
 
     def run(self):
+        self.load_package_data("wgups_package_file.csv")
+        self.load_distance_data("wgups_distance_table.csv")
         while True:
             # TODO
             break
 
-
 if __name__ == "__main__":
-    ui = UI()
-    ui.load_package_data("wgups_package_file.csv")
-    ui.load_distance_data("wgups_distance_table.csv")
-    ui.run()
+    try:
+        ui = UI()
+        ui.run()
+    except KeyboardInterrupt:
+        print("\nExiting program...")
+        exit()
