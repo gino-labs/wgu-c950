@@ -80,9 +80,10 @@ class PackageHashTable:
     #####################
     def get_package(self, package_id: int) -> Package:
         # Return Package object at index
-        if package_id > len(self.packages):
+        package_id = int(package_id)
+        if package_id < 1 or package_id > len(self.packages):
             return None
-        index = int(package_id) % len(self.packages)
+        index = package_id % len(self.packages)
         return self.packages[index]
     
     # Load package data from csv task file
@@ -230,19 +231,7 @@ class Truck:
         self.time = DAY_START
         self.current_location = distance_table.get_location("Western Governors University")
 
-    def load_truck(self, num_packages: int, package_hashtable: PackageHashTable):
-        if num_packages > self.capacity:
-            raise ValueError("Number of packages to load is greater than truck capacity.")
-        while num_packages < len(self.loaded_packages):
-            # Prioritize package constraints first
-            # Then prioritize package deadlines second
-            # Load based off of greedy neighbor algorithm route
-            for package in package_hashtable.packages:
-                pass
-
-    def get_nearest_neighbor(self, location: Location):
-        for neighbor in location.neighbors:
-            pass # TODO
+    # TODO Need to figure out how to handle packages being loaded
 
 #####################
 ### Requirement D ###
@@ -298,6 +287,7 @@ class UI:
         self.load_distance_data("wgups_distance_table.csv")
         self.initialize_trucks()
         while True:
+            # Need functionality in UI to query packages/trucks with any given time
             print("Test run complete.")
             break
 
