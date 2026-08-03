@@ -50,7 +50,7 @@ class PackageHashTable:
 
 
     # Helper class to convert deadlines to datetime objects
-    def _convert_to_datetime(self, deadline: str):
+    def convert_to_datetime(self, deadline: str):
         if deadline == "EOD":
             return DAY_START + timedelta(hours=12)
         parse_time = datetime.strptime(deadline, "%I:%M %p")
@@ -115,6 +115,11 @@ class PackageHashTable:
                 # Load packages after the header row is parsed
                 if start_loading:
                     package_id = row[package_id_index]
+                    special_notes = row[notes_index]
+                    if "delayed" in special_notes.lower():
+                        delivery_status = "delayed - " + DAY_START.strftime("%I:%M %p")
+                    else:
+                        delivery_status = "at the hub - " + DAY_START.strftime("%I:%M %p")
                     self.add_package(
                         package_id,
                         package_weight = row[weight_index],
@@ -123,15 +128,9 @@ class PackageHashTable:
                         delivery_state = row[state_index],
                         delivery_zip_code = row[zip_index],
                         delivery_deadline = row[deadline_index],
+                        delivery_status = delivery_status,
                         special_notes = row[notes_index]
                     )
-
-                    current_package = self.get_package(package_id)
-                    timestamp = DAY_START
-                    if "delayed" in current_package.notes.lower():
-                        current_package.update_status("delayed", timestamp)
-                    else:
-                        current_package.update_status("at the hub", timestamp)
 
 # Helper class for containing data for a delivery location
 class Location:
@@ -173,7 +172,7 @@ class DistanceTable:
             self.locations = []
 
     # Parse location string into Location instance
-    def _set_locations(self, locations_list: list):
+    def set_locations(self, locations_list: list):
         for location in locations_list:
             location_data = location.split("\n")
             location_name = location_data[0].strip()
@@ -257,15 +256,6 @@ class UI:
         print(message, end=end)
         time.sleep(sleep)
 
-    def prompt(self, message_prompt, choices=[]):
-        answer = input(message_prompt)
-        if choices == []:
-            return
-        while answer not in choices:
-            print(f"Invalid choice not in {choices}")
-            answer = input(message_prompt)
-        return answer
-
     def load_package_data(self, packages_csv_file: str):
         self.msg(f"Package data loaded from {packages_csv_file}")
         self.package_hashtable = PackageHashTable()
@@ -282,13 +272,46 @@ class UI:
         self.truck1 = Truck(1, self.distance_table, self.package_hashtable)
         self.truck2 = Truck(2, self.distance_table, self.package_hashtable)
 
+    def parse_time(self, unparsed_time: str):
+        # TODO Make stricter regex string
+        match = re.search(r'(\d{1,2}):(\d{2})\s*([aApP][mM])', unparsed_time)
+        if match:
+            hour = match.group(1)
+            minute = match.group(2)
+            meridiem = match.group(3).upper()
+            time_string = datetime.strptime(f"{hour}:{minute} {meridiem}", "%I:%M %p")
+            return DAY_START.replace(hour=time_string.hour, minute=time_string.minute)
+        return None
+
+    def show_packages_at_time(self, query_time: str, packages=[]):
+        if self.parse_time(query_time):
+            if packages == []:
+                pass # TODO Show all packages
+            else:
+                pass # TODO Show specified packages in list
+        else:
+            return None
+
+    def prompt_for_time_to_check(self):
+        prompt = "Please enter time in format of HH:MM AM/PM\n"
+        answer = input(prompt)
+        while not self.parse_time(answer):
+            print(f"Invalid reponse: {answer}")
+            answer = input(prompt)
+        
+        pass # TODO
+
+    def prompt_for_packages_to_check(self):
+        pass # TODO
+
+
     def run(self):
         self.load_package_data("wgups_package_file.csv")
         self.load_distance_data("wgups_distance_table.csv")
         self.initialize_trucks()
         while True:
             # Need functionality in UI to query packages/trucks with any given time
-            print("Test run complete.")
+            print("Enter packages .")
             break
 
 if __name__ == "__main__":
