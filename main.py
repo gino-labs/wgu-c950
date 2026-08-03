@@ -283,6 +283,10 @@ class UI:
             return DAY_START.replace(hour=time_string.hour, minute=time_string.minute)
         return None
 
+    def parse_package_ids(self, package_ids: str):
+        id = package_ids.split(",")
+
+ 
     def show_packages_at_time(self, query_time: str, packages=[]):
         if self.parse_time(query_time):
             if packages == []:
@@ -298,11 +302,12 @@ class UI:
         while not self.parse_time(answer):
             print(f"Invalid reponse: {answer}")
             answer = input(prompt)
-        
-        pass # TODO
+        return answer
 
     def prompt_for_packages_to_check(self):
-        pass # TODO
+        prompt = "Please enter package IDs to check. Comma separated list or leave blank for all.\n"
+        answer = input(prompt)
+        
 
 
     def run(self):
