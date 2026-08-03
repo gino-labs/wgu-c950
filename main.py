@@ -22,6 +22,9 @@ import time
 from pathlib import Path
 from datetime import datetime, timedelta
 
+# Clock starts at 8:00am
+DAY_START = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
+
 # Helper class to represent a given package
 class Package:
     def __init__(self, package_id, **package_data):
@@ -45,6 +48,14 @@ class PackageHashTable:
     def __init__(self, size=40):
         self.packages = [None] * size
 
+
+    # Helper class to convert deadlines to datetime objects
+    def _convert_to_datetime(self, deadline: str):
+        if deadline == "EOD":
+            return DAY_START + timedelta(hours=12)
+        parse_time = datetime.strptime(deadline, "%I:%M %p")
+        return DAY_START.replace(hour=parse_time.hour, minute=parse_time.minute)
+        
     #####################
     ### Requirement A ###
     #####################
@@ -56,7 +67,7 @@ class PackageHashTable:
             delivery_city = delivery_city, 
             delivery_state = delivery_state, 
             delivery_zip_code = delivery_zip_code,
-            delivery_deadline = delivery_deadline,
+            delivery_deadline = self._convert_to_datetime(delivery_deadline), # Datetime object
             delivery_status = delivery_status,
             special_notes = special_notes
         )
@@ -69,6 +80,8 @@ class PackageHashTable:
     #####################
     def get_package(self, package_id: int) -> Package:
         # Return Package object at index
+        if package_id > len(self.packages):
+            return None
         index = int(package_id) % len(self.packages)
         return self.packages[index]
     
@@ -113,7 +126,7 @@ class PackageHashTable:
                     )
 
                     current_package = self.get_package(package_id)
-                    timestamp = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
+                    timestamp = DAY_START
                     if "delayed" in current_package.notes.lower():
                         current_package.update_status("delayed", timestamp)
                     else:
@@ -175,7 +188,7 @@ class DistanceTable:
     # Helper function for parsing distance table csv data
     def load_from_csv(self, csv_file):
         csv_file = Path(csv_file)
-        if not csv_file.exists:
+        if not csv_file.exists():
             raise FileNotFoundError(f"CSV file not found: {csv_file}")
         
         with open(csv_file, "r", encoding="utf-8") as file:
@@ -214,7 +227,7 @@ class Truck:
         self.loaded_packages = []
         self.distance_table = distance_table
         self.package_hashtable = package_hashtable
-        self.time = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
+        self.time = DAY_START
         self.current_location = distance_table.get_location("Western Governors University")
 
     def load_truck(self, num_packages: int, package_hashtable: PackageHashTable):
@@ -227,8 +240,9 @@ class Truck:
             for package in package_hashtable.packages:
                 pass
 
-    def start_delivery_route(self):
-        pass # TODO
+    def get_nearest_neighbor(self, location: Location):
+        for neighbor in location.neighbors:
+            pass # TODO
 
 #####################
 ### Requirement D ###
