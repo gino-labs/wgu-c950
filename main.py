@@ -20,6 +20,7 @@ import re
 import csv
 import sys
 import time
+import readline
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -233,12 +234,10 @@ class UI:
         self.distance_table = None
         self.truck1 = None
         self.truck2 = None
-        print("##################################################")
-        print("# WGU - Data Structures and Algorithms II (C950) #")
-        print("#             Student ID: 011576592              #")
-        print("#           Student name: Gino Curtis            #")
-        print("##################################################", end="\n\n")
-        self.msg("Welcome to the Program's Interface!", newlines=1, sleep=1)
+        self.msg("Student ID: 011576592", sleep=0.33)
+        self.msg("Student name: Gino Curtis", sleep=0.33)
+        self.msg("Data Structures and Algorithms II (C950)", newlines=2, sleep=0.33)
+        self.msg("Welcome to the Program's Interface!", sleep=1)
         input("Press the 'return' key to begin...\n")
 
     def msg(self, message: str, newlines=1, sleep=1):
@@ -249,12 +248,12 @@ class UI:
         print(message, end=end)
         
     def load_package_data(self, packages_csv_file: str):
-        self.msg(f"  - {packages_csv_file}", sleep=0.25)
+        self.msg(f"  - {packages_csv_file}", sleep=0.33)
         self.package_hashtable = PackageHashTable()
         self.package_hashtable.load_from_csv(packages_csv_file)
 
     def load_distance_data(self, distances_csv_file):
-        self.msg(f"  - {distances_csv_file}", sleep=0.25)
+        self.msg(f"  - {distances_csv_file}", sleep=0.33)
         self.distance_table = DistanceTable()
         self.distance_table.load_from_csv(distances_csv_file)
         
@@ -306,6 +305,7 @@ class UI:
         while not isinstance(answer, datetime):
             print(f"Invalid time: {answer}")
             answer = self.parse_time(input(prompt))
+        time.sleep(0.33)
         return answer
 
     def prompt_for_packages_to_check(self):
@@ -316,6 +316,7 @@ class UI:
         while isinstance(answer, str):
             print(f"Invalid ID: {answer}")
             answer = self.parse_package_ids(input(prompt))
+        time.sleep(0.33)
         return answer
 
     def show_packages(self, query_time: datetime, package_ids: list):
@@ -327,10 +328,10 @@ class UI:
             
 
     def run(self):
-        self.msg("CSV Files Loaded:", sleep=0.5)
+        self.msg("\nCSV Files Loaded:", sleep=0.33)
         self.load_package_data("wgups_package_file.csv")
         self.load_distance_data("wgups_distance_table.csv")
-        self.msg("", sleep=1.5)
+        self.msg("", sleep=0.33)
         self.initialize_trucks()
 
         while True:
