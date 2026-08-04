@@ -68,7 +68,7 @@ class PackageHashTable:
             delivery_city = delivery_city, 
             delivery_state = delivery_state, 
             delivery_zip_code = delivery_zip_code,
-            delivery_deadline = self._convert_to_datetime(delivery_deadline), # Datetime object
+            delivery_deadline = self.convert_to_datetime(delivery_deadline), # Datetime object
             delivery_status = delivery_status,
             special_notes = special_notes
         )
@@ -196,7 +196,7 @@ class DistanceTable:
             csv_data = list(csv.reader(file))
   
         locations_table_head = csv_data[7][2:] # Row 7, Column 3+
-        self._set_locations(locations_table_head)
+        self.set_locations(locations_table_head)
 
         # Parse data beginning at row 8
         rows = csv_data[8:]
@@ -239,7 +239,7 @@ class UI:
         print("#           Student name: Gino Curtis            #")
         print("##################################################", end="\n\n")
         self.msg("Welcome to the Program's Interface!", newlines=2, sleep=1)
-        self.prompt("Press the 'return' key to begin...\n")
+        input("Press the 'return' key to begin...\n")
 
     def msg(self, message: str, newlines=1, sleep=1):
         end = ""
@@ -264,7 +264,7 @@ class UI:
         self.truck1 = Truck(1, self.distance_table, self.package_hashtable)
         self.truck2 = Truck(2, self.distance_table, self.package_hashtable)
 
-    def check_quit(response: str):
+    def check_quit(self, response: str):
         if response == "q":
             sys.exit("Quitting program...")
         return
@@ -288,21 +288,12 @@ class UI:
         id_ints = []
         for id in ids:
             try:
-                if 0 > id > len(self.package_hashtable.packages):
-                    return id
+                if 0 > int(id) > len(self.package_hashtable.packages):
+                    return str(id)
                 id_ints.append(int(id))
             except ValueError:
                 return id
         return id_ints
- 
-    def show_packages_at_time(self, query_time: str, packages=[]):
-        if self.parse_time(query_time):
-            if packages == []:
-                pass # TODO Show all packages
-            else:
-                pass # TODO Show specified packages in list
-        else:
-            return None
 
     def prompt_for_time_to_check(self):
         prompt = "Please enter time in format of HH:MM AM/PM (Enter 'q' to quit):\n"
@@ -322,6 +313,14 @@ class UI:
             answer = input(prompt)
         return answer
 
+    def show_packages(self, query_time: str, package_ids: list):
+        time_string = query_time.strftime("%I:%M %p")
+        if package_ids == []:
+            print(f"TODO: Show all packages at {time_string}")
+        else:
+            print(f"TODO: Show packages {', '.join(package_ids)} at {time_string}")
+            
+
     def run(self):
         self.load_package_data("wgups_package_file.csv")
         self.load_distance_data("wgups_distance_table.csv")
@@ -331,6 +330,7 @@ class UI:
             # Need functionality in UI to query packages/trucks with any given time
             package_ids = self.prompt_for_packages_to_check()
             query_time = self.prompt_for_time_to_check()
+            self.show_packages(query_time, package_ids)
             break
 
 if __name__ == "__main__":
@@ -338,5 +338,4 @@ if __name__ == "__main__":
         ui = UI()
         ui.run()
     except KeyboardInterrupt:
-        print("\nExiting program...")
-        exit()
+        sys.exit("Quitting program...")
