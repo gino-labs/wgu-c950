@@ -18,6 +18,7 @@ Task Assumptions:
 
 import re
 import csv
+import sys
 import time
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -36,7 +37,7 @@ class Package:
         self.zip_code = package_data.get("delivery_zip_code")
         self.deadline = package_data.get("delivery_deadline")
         self.notes = package_data.get("special_notes")
-        self.status = None
+        self.status = package_data.get("delivery_status")
         
     def update_status(self, status: str, timestamp: datetime):
         if status.strip().lower() not in ("delayed", "at the hub", "en route", "delivered"):
@@ -209,15 +210,6 @@ class DistanceTable:
                     distance = float(inverse_row[i])
                 self.locations[i].add_neighbor(self.locations[j], distance)
 
-    # Helper function to show and compare distances between neighbors
-    def show_distances(self):
-        for location in self.locations:
-            for _ in range(len(location.name) + 10):
-                print("-", end='')
-            print(f"\nLocation: {location.name}")
-            for neighbor in location.neighbors:
-                print(f"  Neighbor ({neighbor.distance} mi): {neighbor.name}")
-
 class Truck:
     def __init__(self, truck_number: int, distance_table: DistanceTable, package_hashtable: PackageHashTable):
         self.truck_number = truck_number
@@ -272,9 +264,15 @@ class UI:
         self.truck1 = Truck(1, self.distance_table, self.package_hashtable)
         self.truck2 = Truck(2, self.distance_table, self.package_hashtable)
 
+    def check_quit(response: str):
+        if response == "q":
+            sys.exit("Quitting program...")
+        return
+    
     def parse_time(self, unparsed_time: str):
-        # TODO Make stricter regex string
-        match = re.search(r'(\d{1,2}):(\d{2})\s*([aApP][mM])', unparsed_time)
+        self.check_quit(unparsed_time)
+        match = re.search(r'\b(1[0-2]|0?[1-9]):([0-5][0-9])\s*([AP]M)\b', unparsed_time, re.IGNORECASE)
+
         if match:
             hour = match.group(1)
             minute = match.group(2)
@@ -284,8 +282,18 @@ class UI:
         return None
 
     def parse_package_ids(self, package_ids: str):
-        id = package_ids.split(",")
+        self.check_quit(package_ids)       
+        ids = package_ids.split(",")
 
+        id_ints = []
+        for id in ids:
+            try:
+                if 0 > id > len(self.package_hashtable.packages):
+                    return id
+                id_ints.append(int(id))
+            except ValueError:
+                return id
+        return id_ints
  
     def show_packages_at_time(self, query_time: str, packages=[]):
         if self.parse_time(query_time):
@@ -297,26 +305,32 @@ class UI:
             return None
 
     def prompt_for_time_to_check(self):
-        prompt = "Please enter time in format of HH:MM AM/PM\n"
-        answer = input(prompt)
-        while not self.parse_time(answer):
-            print(f"Invalid reponse: {answer}")
-            answer = input(prompt)
+        prompt = "Please enter time in format of HH:MM AM/PM (Enter 'q' to quit):\n"
+        answer = self.parse_time(input(prompt))
+        while answer is not None:
+            print(f"Invalid time: {answer}")
+            answer = self.parse_time(input(prompt))
         return answer
 
     def prompt_for_packages_to_check(self):
-        prompt = "Please enter package IDs to check. Comma separated list or leave blank for all.\n"
-        answer = input(prompt)
-        
+        prompt = "Please enter package IDs as comma separated list or leave blank for ALL (Enter 'q' to quit):\n"
+        answer = self.parse_package_ids(input(prompt))
+        self.check_quit(answer)
 
+        while isinstance(answer, str):
+            print(f"Invalid ID: {answer}")
+            answer = input(prompt)
+        return answer
 
     def run(self):
         self.load_package_data("wgups_package_file.csv")
         self.load_distance_data("wgups_distance_table.csv")
         self.initialize_trucks()
+
         while True:
             # Need functionality in UI to query packages/trucks with any given time
-            print("Enter packages .")
+            package_ids = self.prompt_for_packages_to_check()
+            query_time = self.prompt_for_time_to_check()
             break
 
 if __name__ == "__main__":
