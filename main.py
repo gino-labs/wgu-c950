@@ -238,25 +238,26 @@ class UI:
         print("#             Student ID: 011576592              #")
         print("#           Student name: Gino Curtis            #")
         print("##################################################", end="\n\n")
-        self.msg("Welcome to the Program's Interface!", newlines=2, sleep=1)
+        self.msg("Welcome to the Program's Interface!", newlines=1, sleep=1)
         input("Press the 'return' key to begin...\n")
 
     def msg(self, message: str, newlines=1, sleep=1):
         end = ""
+        time.sleep(sleep)
         for _ in range(newlines):
             end += "\n"
         print(message, end=end)
-        time.sleep(sleep)
-
+        
     def load_package_data(self, packages_csv_file: str):
-        self.msg(f"Package data loaded from {packages_csv_file}")
+        self.msg(f"  - {packages_csv_file}", sleep=0.25)
         self.package_hashtable = PackageHashTable()
         self.package_hashtable.load_from_csv(packages_csv_file)
 
     def load_distance_data(self, distances_csv_file):
+        self.msg(f"  - {distances_csv_file}", sleep=0.25)
         self.distance_table = DistanceTable()
         self.distance_table.load_from_csv(distances_csv_file)
-        self.msg(f"Distance data loaded from {distances_csv_file}", newlines=2)
+        
 
     def initialize_trucks(self):
         if self.distance_table is None or self.package_hashtable is None:
@@ -279,51 +280,57 @@ class UI:
             meridiem = match.group(3).upper()
             time_string = datetime.strptime(f"{hour}:{minute} {meridiem}", "%I:%M %p")
             return DAY_START.replace(hour=time_string.hour, minute=time_string.minute)
-        return None
+        return unparsed_time
 
     def parse_package_ids(self, package_ids: str):
-        self.check_quit(package_ids)       
+        self.check_quit(package_ids)
+        if not package_ids.strip():
+            return []
+        
         ids = package_ids.split(",")
+        id_numbers = []
 
-        id_ints = []
         for id in ids:
             try:
-                if 0 > int(id) > len(self.package_hashtable.packages):
-                    return str(id)
-                id_ints.append(int(id))
+                id_number = int(id.strip())
+                if id_number > len(self.package_hashtable.packages) or id_number < 0:
+                    return id.strip()
+                id_numbers.append(id_number)
             except ValueError:
-                return id
-        return id_ints
+                return id.strip()
+        return id_numbers
 
     def prompt_for_time_to_check(self):
-        prompt = "Please enter time in format of HH:MM AM/PM (Enter 'q' to quit):\n"
+        prompt = "Enter time in format of HH:MM AM/PM (Enter 'q' to quit):\n"
         answer = self.parse_time(input(prompt))
-        while answer is not None:
+        while not isinstance(answer, datetime):
             print(f"Invalid time: {answer}")
             answer = self.parse_time(input(prompt))
         return answer
 
     def prompt_for_packages_to_check(self):
-        prompt = "Please enter package IDs as comma separated list or leave blank for ALL (Enter 'q' to quit):\n"
+        prompt = "Enter package IDs as comma separated list or leave blank for ALL (Enter 'q' to quit):\n"
         answer = self.parse_package_ids(input(prompt))
         self.check_quit(answer)
 
         while isinstance(answer, str):
             print(f"Invalid ID: {answer}")
-            answer = input(prompt)
+            answer = self.parse_package_ids(input(prompt))
         return answer
 
-    def show_packages(self, query_time: str, package_ids: list):
+    def show_packages(self, query_time: datetime, package_ids: list):
         time_string = query_time.strftime("%I:%M %p")
         if package_ids == []:
-            print(f"TODO: Show all packages at {time_string}")
+            print(f"\nTODO: Show all packages at {time_string}")
         else:
-            print(f"TODO: Show packages {', '.join(package_ids)} at {time_string}")
+            print(f"\nTODO: Show packages {package_ids} at {time_string}")
             
 
     def run(self):
+        self.msg("CSV Files Loaded:", sleep=0.5)
         self.load_package_data("wgups_package_file.csv")
         self.load_distance_data("wgups_distance_table.csv")
+        self.msg("", sleep=1.5)
         self.initialize_trucks()
 
         while True:
@@ -338,4 +345,4 @@ if __name__ == "__main__":
         ui = UI()
         ui.run()
     except KeyboardInterrupt:
-        sys.exit("Quitting program...")
+        sys.exit("\nQuitting program...")
