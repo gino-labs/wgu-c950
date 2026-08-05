@@ -187,6 +187,9 @@ class DistanceTable:
                 return location
         raise ValueError(f"Location not found: {location_name}")
 
+    def get_nearest_neighbor(self):
+        
+
     # Helper function for parsing distance table csv data
     def load_from_csv(self, csv_file):
         csv_file = Path(csv_file)
@@ -223,7 +226,12 @@ class Truck:
         self.time = DAY_START
         self.current_location = distance_table.get_location("Western Governors University")
 
-    # TODO Need to figure out how to handle packages being loaded
+    def load_truck(self):
+        pass
+
+    def deliver_packages(self):
+        pass # TODO
+
 
 #####################
 ### Requirement D ###
@@ -257,7 +265,6 @@ class UI:
         self.distance_table = DistanceTable()
         self.distance_table.load_from_csv(distances_csv_file)
         
-
     def initialize_trucks(self):
         if self.distance_table is None or self.package_hashtable is None:
             raise ValueError("Data tables not loaded yet.")
