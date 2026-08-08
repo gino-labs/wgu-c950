@@ -27,6 +27,18 @@ from datetime import datetime, timedelta
 # Clock starts at 8:00am
 DAY_START = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
 
+# Search a string for a date time match
+def extract_time(_string: str) -> re.Match:
+    return re.search(r'\b(1[0-2]|0?[1-9]):([0-5][0-9])\s*([AP]M)\b', _string, re.IGNORECASE)
+
+# Convert regex match to datetime object
+def regex_to_datetime(re_match: re.Match) -> datetime:
+    hour = re_match.group(1)
+    minute = re_match.group(2)
+    meridiem = re_match.group(3).upper()
+    time_string = datetime.strptime(f"{hour}:{minute} {meridiem}", "%I:%M %p")
+    return DAY_START.replace(hour=time_string.hour, minute=time_string.minute)
+
 # Helper class to represent a given package
 class Package:
     def __init__(self, package_id, **package_data):
@@ -54,8 +66,8 @@ class PackageHashTable:
     def convert_to_datetime(self, deadline: str):
         if deadline == "EOD":
             return DAY_START + timedelta(hours=12)
-        parse_time = datetime.strptime(deadline, "%I:%M %p")
-        return DAY_START.replace(hour=parse_time.hour, minute=parse_time.minute)
+        time_match = extract_time(deadline)
+        return regex_to_datetime(time_match)
         
     #####################
     ### Requirement A ###
@@ -87,14 +99,31 @@ class PackageHashTable:
         index = package_id % len(self.packages)
         return self.packages[index]
 
-    def is_eligible(self, package, truck_id, clock):
-        if package.status == "at the hub":
-            pass
-        
-        
-    def next_package(self):
-        pass
+    def is_deliverable(self, package: Package, truck_id: int, truck_time: datetime):
+        if re.search("at the hub", package.status):
+            return True
+        if re.search(f"Can only be on truck {truck_id}", package.notes):
+            return True
+        if re.search(f"Delayed on flight", package.notes):
+            time_match = extract_time(package.notes)
+            available_time = regex_to_datetime(time_match)
+            if truck_time > available_time:
+                return True
+        if re.search("Wrong address listed", package.notes):
+            available_time == DAY_START.replace(hour=10, minute=20)
+            if truck_time > available_time:
+                return True
+        if re.search("Must be delivered with", package.notes):
+            pass # TODO 
 
+
+    # Get deliverable packages for truck
+    def get_deliverable_packages(self, truck_id, truck_time):
+        deliverable_packages = []
+        for package in self.packages:
+            if self.is_deliverable(package, truck_id, truck_time):
+                deliverable_packages.append(package)
+        return deliverable_packages
     
     # Load package data from csv task file
     def load_from_csv(self, csv_file):
@@ -195,10 +224,6 @@ class DistanceTable:
                 return location
         raise ValueError(f"Location not found: {location_name}")
 
-    def get_nearest_neighbor(self, location: Location):
-        for neighbor in location.neighbors:
-
-
     # Helper function for parsing distance table csv data
     def load_from_csv(self, csv_file):
         csv_file = Path(csv_file)
@@ -232,11 +257,16 @@ class Truck:
         self.loaded_packages = []
         self.distance_table = distance_table
         self.package_hashtable = package_hashtable
-        self.time = DAY_START
+        self.clock = DAY_START
         self.current_location = distance_table.get_location("Western Governors University")
 
-    def load_truck(self):
-        pass
+    # Questions when loading packages
+    # Is package eligible to be loaded onto truck?
+    # Are packages being loaded using Greedy Neighbor Algorithm?
+    # Is package part of a larger set of packages?
+    def load_packages(self):
+        for package in self.package_hashtable.packages:
+            if package.is_eligible(self.truck_number, self.clock):
 
     def deliver_packages(self):
         pass # TODO
@@ -287,14 +317,10 @@ class UI:
     
     def parse_time(self, unparsed_time: str):
         self.check_quit(unparsed_time)
-        match = re.search(r'\b(1[0-2]|0?[1-9]):([0-5][0-9])\s*([AP]M)\b', unparsed_time, re.IGNORECASE)
+        time_match = extract_time(unparsed_time)
 
-        if match:
-            hour = match.group(1)
-            minute = match.group(2)
-            meridiem = match.group(3).upper()
-            time_string = datetime.strptime(f"{hour}:{minute} {meridiem}", "%I:%M %p")
-            return DAY_START.replace(hour=time_string.hour, minute=time_string.minute)
+        if time_match:
+            return regex_to_datetime(time_match)
         return unparsed_time
 
     def parse_package_ids(self, package_ids: str):
@@ -327,7 +353,6 @@ class UI:
     def prompt_for_packages_to_check(self):
         prompt = "Enter package IDs as comma separated list or leave blank for ALL (Enter 'q' to quit):\n"
         answer = self.parse_package_ids(input(prompt))
-        self.check_quit(answer)
 
         while isinstance(answer, str):
             print(f"Invalid ID: {answer}")
