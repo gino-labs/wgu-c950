@@ -114,7 +114,7 @@ class PackageHashTable:
             if truck_time > available_time:
                 return True
         if re.search("Must be delivered with", package.notes):
-            pass # TODO 
+            ids_match = re.search(r"\d{2}")
 
 
     # Get deliverable packages for truck
