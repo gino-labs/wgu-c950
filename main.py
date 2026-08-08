@@ -266,7 +266,7 @@ class Truck:
     # Is package part of a larger set of packages?
     def load_packages(self):
         for package in self.package_hashtable.packages:
-            if package.is_eligible(self.truck_number, self.clock):
+            pass # TODO
 
     def deliver_packages(self):
         pass # TODO
