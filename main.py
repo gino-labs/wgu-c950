@@ -50,7 +50,6 @@ class PackageHashTable:
     def __init__(self, size=40):
         self.packages = [None] * size
 
-
     # Helper class to convert deadlines to datetime objects
     def convert_to_datetime(self, deadline: str):
         if deadline == "EOD":
@@ -87,6 +86,15 @@ class PackageHashTable:
             return None
         index = package_id % len(self.packages)
         return self.packages[index]
+
+    def is_eligible(self, package, truck_id, clock):
+        if package.status == "at the hub":
+            pass
+        
+        
+    def next_package(self):
+        pass
+
     
     # Load package data from csv task file
     def load_from_csv(self, csv_file):
@@ -187,8 +195,9 @@ class DistanceTable:
                 return location
         raise ValueError(f"Location not found: {location_name}")
 
-    def get_nearest_neighbor(self):
-        
+    def get_nearest_neighbor(self, location: Location):
+        for neighbor in location.neighbors:
+
 
     # Helper function for parsing distance table csv data
     def load_from_csv(self, csv_file):
