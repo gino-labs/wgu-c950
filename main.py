@@ -20,9 +20,14 @@ import re
 import csv
 import sys
 import time
-import readline
 from pathlib import Path
 from datetime import datetime, timedelta
+
+# Linux specific import
+try:
+    import readline
+except ImportError:
+    pass
 
 # Clock starts at 8:00am
 DAY_START = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
@@ -53,9 +58,10 @@ class Package:
         self.status = package_data.get("delivery_status")
         
     def update_status(self, status: str, timestamp: datetime):
-        if status.strip().lower() not in ("delayed", "at the hub", "en route", "delivered"):
+        status = status.strip().lower()
+        if status not in ("delayed", "at the hub", "en route", "delivered"):
             raise ValueError(f"Invalid status: {status}")
-        self.status = status.capitalize() + " - " + timestamp.strftime('%I:%M %p')
+        self.status = status + " - " + timestamp.strftime('%I:%M %p')
 
 ### Hash Table data structure with tasks A & B ###
 class PackageHashTable:
@@ -101,12 +107,12 @@ class PackageHashTable:
         return self.packages[index]
 
     # Check a package for delivery constraints
-    def is_deliverable(self, package: Package, truck: "Truck", check_group=True):
+    def is_deliverable(self, package: Package, truck: "Truck", group_check=True):
         # At the hub?
-        if "at the hub" in package.status:
+        if "at the hub" not in package.status:
             return False
         # Truck 2 only?
-        if "Can only be on truck 2" in package.notes and truck.id == 1:
+        if "Can only be on truck 2" in package.notes and truck.id != 2:
             return False
         # Delayed package?
         if "Delayed" in package.notes:
@@ -122,11 +128,11 @@ class PackageHashTable:
             if truck.time < available_time:
                 return False
         # Package in a package group?
-        if "Must be delivered with" in package.notes and check_group:
+        if group_check:
             for package_group in self.package_groups:
                 if package in package_group:
                     # All packages in package group must be deliverable
-                    if not all([self.is_deliverable(pkg, truck, check_group=False) for pkg in package_group]):
+                    if not all(self.is_deliverable(pkg, truck, group_check=False) for pkg in package_group):
                         return False
         # All checks passed
         return True
@@ -372,12 +378,13 @@ class UI:
 
         for id in ids:
             try:
-                id_number = int(id.strip())
-                if id_number > len(self.package_hashtable.packages) or id_number < 0:
-                    return id.strip()
+                id = id.strip()
+                id_number = int(id)
+                if id_number > len(self.package_hashtable.packages) or id_number < 1:
+                    return id
                 id_numbers.append(id_number)
             except ValueError:
-                return id.strip()
+                return id
         return id_numbers
 
     def prompt_for_time_to_check(self):
