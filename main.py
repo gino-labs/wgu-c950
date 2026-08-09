@@ -31,6 +31,7 @@ except ImportError:
 
 # Clock starts at 8:00am
 DAY_START = datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
+DAY_END = DAY_START + timedelta(hours=12)
 
 # Search a string for a date time match
 def extract_time(_string: str) -> re.Match:
@@ -48,9 +49,9 @@ def regex_to_datetime(re_match: re.Match) -> datetime:
 class Package:
     def __init__(self, package_id, **package_data):
         self.id = int(package_id)
-        self.weight = package_data.get("package_weight")
         self.address = package_data.get("delivery_address")
         self.city = package_data.get("delivery_city")
+        self.weight = package_data.get("package_weight")
         self.state = package_data.get("delivery_state")
         self.zip_code = package_data.get("delivery_zip_code")
         self.deadline = package_data.get("delivery_deadline")
@@ -72,7 +73,7 @@ class PackageHashTable:
     # Helper class to convert deadlines to datetime objects
     def convert_to_datetime(self, deadline: str):
         if deadline == "EOD":
-            return DAY_START + timedelta(hours=12)
+            return DAY_END
         time_match = extract_time(deadline)
         return regex_to_datetime(time_match)
         
@@ -298,12 +299,19 @@ class Truck:
         self.time = DAY_START
         self.current_location = distance_table.get_location("Western Governors University")
 
-    # Questions when loading packages
-    # Is package eligible to be loaded onto truck?
-    # Are packages being loaded using Greedy Neighbor Algorithm?
-    # Is package part of a larger set of packages?
-    def load_packages(self):
-        for package in self.package_hashtable.packages:
+
+    def load_packages(self, return_by_time=None, limit=None):
+        if not limit:
+            limit = self.capacity
+        if isinstance(return_by_time, str):
+            time_match = extract_time(return_by_time)
+            return_by_time = regex_to_datetime(time_match)
+        if not return_by_time:
+            return_by_time = DAY_END
+       
+        
+        deliverable_packages = self.package_hashtable.get_deliverable_packages(self)
+        for package in deliverable_packages:
             pass # TODO
 
     def deliver_packages(self):
