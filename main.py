@@ -114,13 +114,6 @@ class PackageHashTable:
         # Truck 2 only?
         if "Can only be on truck 2" in package.notes and truck.id != 2:
             return False
-        # Delayed package?
-        if "Delayed" in package.notes:
-            time_match = extract_time(package.notes)
-            available_time = regex_to_datetime(time_match)
-            # Truck time must be later than package available time
-            if truck.time < available_time:
-                return False
         # Wrong address listed?
         if "Wrong address listed" in package.notes:
             available_time = DAY_START.replace(hour=10, minute=20)
