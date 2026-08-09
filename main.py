@@ -61,6 +61,7 @@ class Package:
 class PackageHashTable:
     def __init__(self, size=40):
         self.packages = [None] * size
+        self.package_groups = [] # Package groups to be delivered together
 
     # Helper class to convert deadlines to datetime objects
     def convert_to_datetime(self, deadline: str):
@@ -99,22 +100,55 @@ class PackageHashTable:
         index = package_id % len(self.packages)
         return self.packages[index]
 
-    def is_deliverable(self, package: Package, truck_id: int, truck_time: datetime):
-        if re.search("at the hub", package.status):
-            return True
-        if re.search(f"Can only be on truck {truck_id}", package.notes):
-            return True
-        if re.search(f"Delayed on flight", package.notes):
-            time_match = extract_time(package.notes)
-            available_time = regex_to_datetime(time_match)
-            if truck_time > available_time:
-                return True
-        if re.search("Wrong address listed", package.notes):
-            available_time == DAY_START.replace(hour=10, minute=20)
-            if truck_time > available_time:
-                return True
-        if re.search("Must be delivered with", package.notes):
-            ids_match = re.search(r"\d{2}")
+    def build_package_groups(self):
+        package_group = []
+        for package in self.packages:
+            if "Must be delivered with" in package.notes:
+                matches = re.findall(r"\d{1,2}", package.notes)
+                for match in matches:
+                    id = int(match)
+                    package_group.append(self.get_package(id))
+                package_group.append(package)
+            self.package_groups.append(package_group)
+        else:
+            for group in self.package_groups:
+                pass # TODO
+                
+
+
+    # Check a package for delivery constraints
+    def is_deliverable(self, package: Package, truck: Truck):
+        def check_package():
+            # At the hub?
+            if "at the hub" in package.status:
+                return False
+            
+            # Truck 2 only?
+            if "Can only be on truck 2" in package.notes and truck.id == 1:
+                return False
+
+            # Delayed package?
+            if "Delayed" in package.notes:
+                time_match = extract_time(package.notes)
+                available_time = regex_to_datetime(time_match)
+                # Truck time must be later than package available time
+                if truck.time < available_time:
+                    return False
+
+            # Wrong address listed?
+            if "Wrong address listed" in package.notes:
+                available_time == DAY_START.replace(hour=10, minute=20)
+                # Truck time must be later than package available time
+                if truck.time > available_time:
+                    return False
+
+        def check_package_group():
+            # Every package to be delivered together is deliverable?
+            if "Must be delivered with" in package.notes:
+                matches = re.findall(r"\d{1,2}", package.notes)
+                for match in matches:
+                    pass # TODO
+            
 
 
     # Get deliverable packages for truck
@@ -249,15 +283,15 @@ class DistanceTable:
                 self.locations[i].add_neighbor(self.locations[j], distance)
 
 class Truck:
-    def __init__(self, truck_number: int, distance_table: DistanceTable, package_hashtable: PackageHashTable):
-        self.truck_number = truck_number
+    def __init__(self, truck_id: int, distance_table: DistanceTable, package_hashtable: PackageHashTable):
+        self.id = truck_id
         self.speed = 18
         self.capacity = 16
         self.miles_driven = 0
         self.loaded_packages = []
         self.distance_table = distance_table
         self.package_hashtable = package_hashtable
-        self.clock = DAY_START
+        self.time = DAY_START
         self.current_location = distance_table.get_location("Western Governors University")
 
     # Questions when loading packages
