@@ -3,7 +3,8 @@ import time
 from datetime import datetime
 from packages import PackageHashTable
 from locations import DistanceTable
-from delivery import Truck, TimeInfo
+from timeinfo import TimeInfo
+from truck import Truck
 
 #####################
 ### Requirement D ###

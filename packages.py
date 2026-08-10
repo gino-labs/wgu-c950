@@ -2,8 +2,7 @@ import re
 import csv
 from pathlib import Path
 from datetime import datetime
-from delivery import Truck, TimeInfo
-
+from timeinfo import TimeInfo
 
 # Helper class to represent a given package
 class Package:
@@ -15,9 +14,9 @@ class Package:
         self.state = package_data.get("delivery_state")
         self.zip_code = package_data.get("delivery_zip_code")
         self.deadline = self.convert_deadline(package_data.get("delivery_deadline"))
-        self.notes = self.set_status(package_data.get("delivery_notes"), TimeInfo.day_start_time())
-        self.status = package_data.get("delivery_status")
-        self.package_group = []
+        self.notes = package_data.get("delivery_notes")
+        self.status = self.status_string(package_data.get("delivery_status"))
+        self.group = []
 
     def convert_deadline(self, deadline: str):
         deadline = deadline.strip()
@@ -26,24 +25,27 @@ class Package:
         time_match = TimeInfo.extract_regex_time(deadline)
         return TimeInfo.regex_to_datetime(time_match)
 
-    def set_status(self, status: str, update_time: datetime):
+    def status_string(self, status, update_time=TimeInfo.day_start_time()):
         status = status.strip().lower()
         if status not in ("delayed", "at the hub", "en route", "delivered"):
             raise ValueError(f"Invalid status: {status}")
+        return f"{status} - {TimeInfo.timestamp(update_time)}"
+
+    def set_status(self, status: str, update_time: datetime):
         # Don't update package already delivered
         if "delivered" in self.status:
             return
-        self.status = f"{status} - {TimeInfo.timestamp(update_time)}"
+        self.status = self.status_string(status, update_time=update_time)
 
     def set_package_group(self, package_group: list):
-        self.package_group = package_group
+        self.group = package_group
 
     def in_package_group(self):
-        if self.package_group:
+        if self.group:
             return True
 
     # Check a package for delivery constraints
-    def is_deliverable(self, truck: "Truck"):
+    def is_deliverable(self, truck, check_group=True):
         # At the hub?
         if "at the hub" not in self.status:
             return False
@@ -57,7 +59,10 @@ class Package:
             if truck.time < available_time:
                 return False
         # In a package group?
-
+        if self.in_package_group() and check_group:
+            for package in self.group:
+                if not package.is_deliverable(truck, check_group=False):
+                    return False
         # All checks passed
         return True
 
@@ -69,7 +74,7 @@ class PackageHashTable:
     #####################
     ### Requirement A ###
     #####################
-    def add_package(self, package_id, package_weight=None, delivery_address=None, delivery_city=None, delivery_state=None, delivery_zip_code=None, delivery_deadline=None, delivery_status=None, delivery_notes=None, time_added=TimeInfo.day_start_time()):
+    def add_package(self, package_id, package_weight=None, delivery_address=None, delivery_city=None, delivery_state=None, delivery_zip_code=None, delivery_deadline=None, delivery_status=None, delivery_notes=None):
         package = Package(
             package_id,
             package_weight = package_weight,
@@ -107,12 +112,14 @@ class PackageHashTable:
                 package_group = package_group | group
             merged_groups.append(package_group)
 
+        # Update each package in a group
         for group in merged_groups:
-            for id in group:
-                self.get_package(id).set_package_group(group)
+            package_group = [self.get_package(id) for id in group]
+            for package in package_group:
+                package.set_package_group(package_group)
     
     # Get deliverable packages for truck
-    def get_deliverable_packages(self, truck: "Truck"):
+    def get_deliverable_packages(self, truck):
         deliverable_packages = []
         for package in self.packages:
             package_group = package.get_package_group(self.package_groups)
