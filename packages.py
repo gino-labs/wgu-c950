@@ -15,8 +15,9 @@ class Package:
         self.state = package_data.get("delivery_state")
         self.zip_code = package_data.get("delivery_zip_code")
         self.deadline = self.convert_deadline(package_data.get("delivery_deadline"))
-        self.notes = self.set_status(package_data.get("special_notes"), TimeInfo.day_start_time())
+        self.notes = self.set_status(package_data.get("delivery_notes"), TimeInfo.day_start_time())
         self.status = package_data.get("delivery_status")
+        self.package_group = []
 
     def convert_deadline(self, deadline: str):
         deadline = deadline.strip()
@@ -34,8 +35,15 @@ class Package:
             return
         self.status = f"{status} - {TimeInfo.timestamp(update_time)}"
 
+    def set_package_group(self, package_group: list):
+        self.package_group = package_group
+
+    def in_package_group(self):
+        if self.package_group:
+            return True
+
     # Check a package for delivery constraints
-    def is_deliverable(self, truck: "Truck", package_group=None):
+    def is_deliverable(self, truck: "Truck"):
         # At the hub?
         if "at the hub" not in self.status:
             return False
@@ -48,36 +56,20 @@ class Package:
             # Truck time must be later than self available time
             if truck.time < available_time:
                 return False
+        # In a package group?
+
         # All checks passed
         return True
-
-class PackageGroups:
-    def __init__(self):
-        self.package_groups = []
-
-    def __iter__(self):
-        for package_group in self.package_groups:
-            for package in package_group:
-                yield package
-
-    def get_group_containing_package(self, package: Package):
-        for package_group in self.package_groups:
-            if package in package_group:
-                return package_group
-
-    def is_group_deliverable(self):
-        return all(package.is_deliverable() for package in self.package_group)
 
 ### Hash Table data structure with tasks A & B ###
 class PackageHashTable:
     def __init__(self, size=40):
         self.packages = [None] * size
-        self.package_groups = PackageGroups() # Package groups to be delivered together
 
     #####################
     ### Requirement A ###
     #####################
-    def add_package(self, package_id, package_weight=None, delivery_address=None, delivery_city=None, delivery_state=None, delivery_zip_code=None, delivery_deadline=None, delivery_status=None, special_notes=None, time_added=TimeInfo.day_start_time()):
+    def add_package(self, package_id, package_weight=None, delivery_address=None, delivery_city=None, delivery_state=None, delivery_zip_code=None, delivery_deadline=None, delivery_status=None, delivery_notes=None, time_added=TimeInfo.day_start_time()):
         package = Package(
             package_id,
             package_weight = package_weight,
@@ -87,7 +79,7 @@ class PackageHashTable:
             delivery_zip_code = delivery_zip_code,
             delivery_deadline = delivery_deadline,
             delivery_status = delivery_status,
-            special_notes = special_notes
+            delivery_notes = delivery_notes
         )
         # Hash Package ID with modulo operator and store at index
         index = package.id % len(self.packages)
@@ -104,30 +96,20 @@ class PackageHashTable:
         index = package_id % len(self.packages)
         return self.packages[index]
 
-    def add_package_group(self, package_ids: list):
-        group = PackageGroup()
-        for id in package_ids:
-            package = self.get_package(id)
-            group.add_package(package)
-        self.package_groups.append(group)
+    def update_package_groups(self, package_groups: list):
+        for package_group in package_groups:
+            merged_groups = []
+            # Any group in merged groups that has intersecting elements with the current package group
+            overlapping_groups = [group for group in merged_groups if group & package_group]
 
-    def merge_package_groups(self):
-        merged_groups = []
-        # Any group in merged groups that has intersecting elements with the current package group
-        overlapping_groups = [group for group in merged_groups if group & package_group]
+            for group in overlapping_groups:
+                merged_groups.remove(group)
+                package_group = package_group | group
+            merged_groups.append(package_group)
 
-        for group in overlapping_groups:
-            merged_groups.remove(group)
-            package_group = package_group | group
-        merged_groups.append(package_group)
-        # Set package groups that must be delivered together
-        self.package_groups = merged_groups
-
-    def get_package_group(self, package: Package):
-        for group in self.package_groups:
-            if package.id in group:
-                return group
-        return None
+        for group in merged_groups:
+            for id in group:
+                self.get_package(id).set_package_group(group)
     
     # Get deliverable packages for truck
     def get_deliverable_packages(self, truck: "Truck"):
@@ -147,6 +129,7 @@ class PackageHashTable:
         with open(csv_file, "r", encoding="utf-8") as file:
             rows = list(csv.reader(file))
 
+        package_groups = []
         start_loading = False
         for row in rows:
             if "Package" in row[0] and "ID" in row[0]:
@@ -167,9 +150,9 @@ class PackageHashTable:
             # Load packages after the header row is parsed
             if start_loading:
                 package_id = row[package_id_index]
-                special_notes = row[notes_index]
+                delivery_notes = row[notes_index]
 
-                if "Delayed" in special_notes:
+                if "Delayed" in delivery_notes:
                     delivery_status = "delayed"
                 else:
                     delivery_status = "at the hub"
@@ -184,6 +167,12 @@ class PackageHashTable:
                     delivery_zip_code = row[zip_index],
                     delivery_deadline = row[deadline_index],
                     delivery_status = delivery_status,
-                    special_notes = row[notes_index]
+                    delivery_notes = row[notes_index]
                 )
+
+                if "Must be delivered with" in delivery_notes:
+                    group = re.findall(r'\d+', delivery_notes) + [package_id]
+                    package_groups.append(group)
+
+        self.update_package_groups(package_groups)
 
