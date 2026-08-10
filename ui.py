@@ -95,6 +95,11 @@ class UI:
         time.sleep(0.33)
         return answer
 
+    # Format requested packages for easier viewing
+    def present_pretty_packages(self, packages: list):
+        pass # TODO
+        
+
     def show_packages(self, query_time: datetime, package_ids: list):
         time_string = query_time.strftime("%I:%M %p")
         if package_ids == []:
