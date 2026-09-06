@@ -3,6 +3,10 @@ import csv
 from pathlib import Path
 from datetime import datetime
 from timeinfo import TimeInfo
+from locations import DistanceTable, Location, Neighbor
+
+# Distance Table for referencing locations/neighbors
+distance_table = DistanceTable()
 
 # Helper class to represent a given package
 class Package:
@@ -17,6 +21,8 @@ class Package:
         self.notes = package_data.get("delivery_notes")
         self.status = self.status_string(package_data.get("delivery_status"))
         self.group = []
+        self.delivery_location = distance_table.address_to_location(self.address)
+        self.delivery_location.set_package(self)
 
     def convert_deadline(self, deadline: str):
         deadline = deadline.strip()
@@ -65,6 +71,9 @@ class Package:
                     return False
         # All checks passed
         return True
+
+    def get_next_deliverable_package(self, deliverable_packages):
+        pass
 
 ### Hash Table data structure with tasks A & B ###
 class PackageHashTable:

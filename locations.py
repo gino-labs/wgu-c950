@@ -9,6 +9,7 @@ class Location:
         self.address = address
         self.zip_code = None
         self.neighbors = []
+        self.package = None
     
     # Helper method for using Location class with python 'in' syntax
     def __eq__(self, other):
@@ -26,13 +27,14 @@ class Location:
         neighbor = Neighbor(neighbor_location, neighbor_distance)
         self.neighbors.append(neighbor)
 
+    def set_package(self, package):
+        self.package = package
+
+
 # Object Containing Neighbor Details for a given location
 class Neighbor:
     def __init__(self, neighbor: Location, distance: float):
-        self.name = neighbor.name
-        self.address = neighbor.address
-        self.zip_code = neighbor.zip_code
-        self.neighbors = neighbor.neighbors
+        self.location = neighbor
         self.distance = distance
 
 # Class for organizing distance table data
@@ -54,6 +56,12 @@ class DistanceTable:
             if location.name.lower() == location_name.lower():
                 return location
         raise ValueError(f"Location not found: {location_name}")
+
+    def address_to_location(self, address: str):
+        for location in self.locations:
+            if address in location.address:
+                return location
+            return None
 
     # Helper function for parsing distance table csv data
     def load_from_csv(self, csv_file):
