@@ -22,7 +22,7 @@ class Package:
         self.status = self.status_string(package_data.get("delivery_status"))
         self.group = []
         self.delivery_location = distance_table.address_to_location(self.address)
-        self.delivery_location.set_package(self)
+
 
     def convert_deadline(self, deadline: str):
         deadline = deadline.strip()
@@ -76,15 +76,21 @@ class Package:
     def get_nearest_neighbor(self, deliverable_packages: list):
         deliverable_locations = []
         for package in deliverable_packages:
-            pass # TODO
+            deliverable_locations.append(package.delivery_location)
 
+        for neighbor in self.delivery_location.neighbors:
+            if neighbor.location in deliverable_locations:
+                print(f"Neighbor: {neighbor.location.name} is in deliverable locations")
+            else:
+                print(f"Neighbor: {neighbor.location.name} is NOT in deliverable locations")
 
 
 
 ### Hash Table data structure with tasks A & B ###
 class PackageHashTable:
-    def __init__(self, size=40):
+    def __init__(self, size=40, csv_file="wgups_package_file.csv"):
         self.packages = [None] * size
+        self.load_from_csv(csv_file)
 
     #####################
     ### Requirement A ###
@@ -142,6 +148,10 @@ class PackageHashTable:
                 deliverable_packages.append(package)
         return deliverable_packages
 
+    # Get deliverable locations
+    def get_deliverable_locations(self, truck):
+        deliverable_packages = self.get_deliverable_packages(truck)
+    
     # Greedy neighbor loading
     def load_greedy_neighbor_packages(self, truck):
         deliverable_packages = self.get_deliverable_packages(truck)
@@ -211,3 +221,6 @@ class PackageHashTable:
 
         self.update_package_groups(package_groups)
 
+if __name__ == "__main__":
+    pt = PackageHashTable()
+    print(pt.packages[0].delivery_location.name)
