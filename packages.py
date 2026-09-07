@@ -72,8 +72,6 @@ class Package:
         # All checks passed
         return True
 
-    def get_next_deliverable_package(self, deliverable_packages):
-        pass
 
 ### Hash Table data structure with tasks A & B ###
 class PackageHashTable:
@@ -135,6 +133,19 @@ class PackageHashTable:
             if package.is_deliverable(truck, package_group=package_group):
                 deliverable_packages.append(package)
         return deliverable_packages
+
+    def get_next_deliverable_package():
+        pass
+
+    # Greedy neighbor loading
+    def load_greedy_neighbor_packages(self, truck):
+        deliverable_packages = self.get_deliverable_packages(truck)
+        if not deliverable_packages:
+            return None
+        
+        for package in deliverable_packages:
+                
+
     
     # Load package data from csv task file
     def load_from_csv(self, csv_file):
