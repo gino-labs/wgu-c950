@@ -72,6 +72,14 @@ class Package:
         # All checks passed
         return True
 
+    # Get Nearest neighbor package
+    def get_nearest_neighbor(self, deliverable_packages: list):
+        deliverable_locations = []
+        for package in deliverable_packages:
+            pass # TODO
+
+
+
 
 ### Hash Table data structure with tasks A & B ###
 class PackageHashTable:
@@ -134,16 +142,16 @@ class PackageHashTable:
                 deliverable_packages.append(package)
         return deliverable_packages
 
-    def get_next_deliverable_package():
-        pass
-
     # Greedy neighbor loading
     def load_greedy_neighbor_packages(self, truck):
         deliverable_packages = self.get_deliverable_packages(truck)
         if not deliverable_packages:
             return None
-        
+
+        loaded_packages = []
         for package in deliverable_packages:
+            next_package = package.get_nearest_neighbor()
+
                 
 
     

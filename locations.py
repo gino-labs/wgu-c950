@@ -27,6 +27,11 @@ class Location:
         neighbor = Neighbor(neighbor_location, neighbor_distance)
         self.neighbors.append(neighbor)
 
+    # Return list of neighbors sorted by distance
+    def sort_neighbors(self):
+        sorted_neighbors = sorted(self.neighbors, key=lambda n: n.distance)
+        self.neighbors = sorted_neighbors
+
     def set_package(self, package):
         self.package = package
 
@@ -39,9 +44,11 @@ class Neighbor:
 
 # Class for organizing distance table data
 class DistanceTable:
-    def __init__(self):
+    def __init__(self, csv_file="wgups_distance_table.csv"):
             # List to hold Location instances
             self.locations = []
+            # Load data from provided distance table csv file
+            self.load_from_csv(csv_file)
 
     # Parse location string into Location instance
     def set_locations(self, locations_list: list):
@@ -85,4 +92,17 @@ class DistanceTable:
                 except ValueError:
                     inverse_row = rows[j][2:]
                     distance = float(inverse_row[i])
+                # Don't add self as location 
+                if distance == 0.0:
+                    continue
                 self.locations[i].add_neighbor(self.locations[j], distance)
+            self.locations[i].sort_neighbors()
+            
+
+if __name__ == "__main__":
+    dt = DistanceTable()
+    for l in dt.locations:
+        print(len(l.neighbors))
+        print(l.name)
+        for neighbor in l.neighbors:
+            print(f"Neighbor: {neighbor.distance} mi, {neighbor.location.name}")
