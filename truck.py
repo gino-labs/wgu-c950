@@ -1,4 +1,4 @@
-from timeinfo import TimeInfo
+from clock import Clock
 
 class Truck:
     def __init__(self, truck_id: int, distance_table, package_hashtable):
@@ -9,7 +9,7 @@ class Truck:
         self.loaded_packages = []
         self.distance_table = distance_table
         self.package_hashtable = package_hashtable
-        self.time = TimeInfo.day_start_time()
+        self.time = Clock.day_start_time()
         self.current_location = distance_table.get_location("Western Governors University")
 
 
@@ -17,10 +17,10 @@ class Truck:
         if not limit:
             limit = self.capacity
         if isinstance(return_by_time, str):
-            time_match = TimeInfo.extract_regex_time(return_by_time)
-            return_by_time = TimeInfo.regex_to_datetime(time_match)
+            time_match = Clock.extract_regex_time(return_by_time)
+            return_by_time = Clock.regex_to_datetime(time_match)
         if not return_by_time:
-            return_by_time = TimeInfo.day_end_time()
+            return_by_time = Clock.day_end_time()
        
         
         deliverable_packages = self.package_hashtable.get_deliverable_packages(self)

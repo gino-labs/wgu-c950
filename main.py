@@ -22,7 +22,7 @@ from datetime import datetime
 
 from packages import PackageHashTable
 from locations import DistanceTable
-from timeinfo import TimeInfo
+from clock import Clock
 from truck import Truck
 
 # Linux specific import
@@ -76,10 +76,10 @@ class UI:
     
     def parse_time(self, unparsed_time: str):
         self.check_quit(unparsed_time)
-        time_match = TimeInfo.extract_regex_time(unparsed_time)
+        time_match = Clock.extract_regex_time(unparsed_time)
 
         if time_match:
-            return TimeInfo.regex_to_datetime(time_match)
+            return Clock.regex_to_datetime(time_match)
         return unparsed_time
 
     def parse_package_ids(self, package_ids: str):

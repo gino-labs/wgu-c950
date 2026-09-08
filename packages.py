@@ -2,7 +2,7 @@ import re
 import csv
 from pathlib import Path
 from datetime import datetime
-from timeinfo import TimeInfo
+from clock import Clock
 from locations import DistanceTable, Location, Neighbor
 
 # Distance Table for referencing locations/neighbors
@@ -27,15 +27,15 @@ class Package:
     def convert_deadline(self, deadline: str):
         deadline = deadline.strip()
         if deadline == "EOD":
-            return TimeInfo.day_end_time()
-        time_match = TimeInfo.extract_regex_time(deadline)
-        return TimeInfo.regex_to_datetime(time_match)
+            return Clock.day_end_time()
+        time_match = Clock.extract_regex_time(deadline)
+        return Clock.regex_to_datetime(time_match)
 
-    def status_string(self, status, update_time=TimeInfo.day_start_time()):
+    def status_string(self, status, update_time=Clock.day_start_time()):
         status = status.strip().lower()
         if status not in ("delayed", "at the hub", "en route", "delivered"):
             raise ValueError(f"Invalid status: {status}")
-        return f"{status} - {TimeInfo.timestamp(update_time)}"
+        return f"{status} - {Clock.timestamp(update_time)}"
 
     def set_status(self, status: str, update_time: datetime):
         # Don't update package already delivered
@@ -60,7 +60,7 @@ class Package:
             return False
         # Wrong address listed?
         if "Wrong address listed" in self.notes:
-            available_time = TimeInfo.time_today(hour=10, minute=20)
+            available_time = Clock.time_today(hour=10, minute=20)
             # Truck time must be later than self available time
             if truck.time < available_time:
                 return False
